@@ -1,0 +1,41 @@
+---
+title: "Regex Tester"
+slug: "regex-tester"
+no: 1
+category: "text"
+description: "Test JavaScript regular expressions with live match highlighting, capture-group tables, and one-click email, URL, and IPv4 patterns."
+keywords: ["regex tester", "regular expression tester", "regex online", "test regex", "javascript regex", "regex match groups"]
+version: "1.0"
+added: 2026-06-27
+relatedTools: ["duplicate-line-remover", "word-character-counter", "xml-formatter"]
+faq:
+  - q: "Which regex flavor does this tester use?"
+    a: "JavaScript (ECMAScript). Patterns run through your browser's own RegExp engine, so behavior matches Node.js and browser code exactly. Perl/PCRE-specific syntax like possessive quantifiers or (?#comments) is not supported."
+  - q: "Is my test text uploaded anywhere?"
+    a: "No. Matching happens entirely in your browser tab. Nothing is transmitted, logged, or stored — you can use production data or logs safely, even offline."
+  - q: "How do I see named capture groups?"
+    a: "Use the (?<name>…) syntax in your pattern. Named groups appear in the GROUPS column of the match table alongside the numbered groups $1, $2, and so on."
+  - q: "Why does my pattern only find one match?"
+    a: "Enable the g (global) flag. Without it, JavaScript regexes stop after the first match — the same behavior your code would have."
+  - q: "Can a pattern hang the page?"
+    a: "Catastrophic backtracking is real: patterns like (a+)+$ against long non-matching input can take exponential time. The tester caps output at 1,000 matches, but an expensive pattern still runs on your CPU — simplify nested quantifiers if typing becomes slow."
+---
+
+## What it does
+
+Type a pattern and test text; every match is highlighted instantly and broken out into a table with positions and capture groups. It uses the browser's native JavaScript RegExp engine, so what matches here matches in your code — no server round-trip, no flavor surprises.
+
+## Examples
+
+**Extract email addresses from a log dump.** Press the EMAIL quick-insert. Against a line like `jana.novak@example.com opened #4411`, the match table shows the full address, and with the pre-filled pattern `(?<user>\w[\w.]*)@(?<host>[\w.-]+\.[a-z]{2,})` you get `user` and `host` as named groups — ready to map to replacement syntax like `$<user>`.
+
+**Validate IPv4 addresses strictly.** The IPV4 quick-insert uses range-checked octets — `(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)` — so `192.168.0.14` matches but `999.1.1.1` does not. A naive `\d+\.\d+\.\d+\.\d+` would accept both.
+
+**Find duplicated words.** Pattern `\b(\w+)\s+\1\b` with flags `gi` catches accidental repetitions like "the the" using a backreference. The GROUPS column shows what `$1` captured for each hit.
+
+## Edge cases & notes
+
+- **Zero-length matches** (e.g. pattern `a*` matching between characters) are listed as `(empty)` in the table; the engine advances one character so the loop always terminates.
+- **The `m` flag** changes `^` and `$` to match at line boundaries; without it they anchor to the whole input.
+- **The `s` flag** lets `.` cross newlines — useful for matching multi-line blocks.
+- Matches are capped at 1,000 rows to keep the page responsive on huge inputs; the count label still reflects the true total up to that cap.

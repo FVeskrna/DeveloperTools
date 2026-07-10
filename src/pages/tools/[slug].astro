@@ -1,0 +1,66 @@
+---
+import { getCollection, render } from 'astro:content';
+import ToolShell from '../../components/ToolShell.astro';
+// Client directives require components imported directly in this file —
+// a registry re-export loses the import metadata Astro needs for hydration.
+import RegexTester from '../../components/tools/RegexTester';
+import YamlJsonConverter from '../../components/tools/YamlJsonConverter';
+import TimestampConverter from '../../components/tools/TimestampConverter';
+import SqlFormatterTool from '../../components/tools/SqlFormatterTool';
+import XmlFormatterTool from '../../components/tools/XmlFormatterTool';
+import DuplicateLineRemover from '../../components/tools/DuplicateLineRemover';
+import NumberBaseConverter from '../../components/tools/NumberBaseConverter';
+import WordCharCounter from '../../components/tools/WordCharCounter';
+import FetchXmlFormatter from '../../components/tools/FetchXmlFormatter';
+import ODataFilterBuilder from '../../components/tools/ODataFilterBuilder';
+
+const KNOWN_SLUGS = [
+  'regex-tester',
+  'yaml-json-converter',
+  'unix-timestamp-converter',
+  'sql-formatter',
+  'xml-formatter',
+  'duplicate-line-remover',
+  'number-base-converter',
+  'word-character-counter',
+  'fetchxml-formatter',
+  'odata-filter-builder',
+];
+
+export async function getStaticPaths() {
+  const tools = await getCollection('tools');
+  return tools.map((entry) => ({
+    params: { slug: entry.data.slug },
+    props: { entry, all: tools },
+  }));
+}
+
+const { entry, all } = Astro.props;
+const { Content } = await render(entry);
+
+const related = entry.data.relatedTools
+  .map((slug) => all.find((t) => t.data.slug === slug)?.data)
+  .filter((d): d is NonNullable<typeof d> => d !== undefined)
+  .slice(0, 3);
+
+const slug = entry.data.slug;
+if (!KNOWN_SLUGS.includes(slug)) {
+  throw new Error(`No tool component registered for slug "${slug}"`);
+}
+---
+
+<ToolShell tool={entry.data} related={related}>
+  {slug === 'regex-tester' && <RegexTester client:load />}
+  {slug === 'yaml-json-converter' && <YamlJsonConverter client:load />}
+  {slug === 'unix-timestamp-converter' && <TimestampConverter client:load />}
+  {slug === 'sql-formatter' && <SqlFormatterTool client:load />}
+  {slug === 'xml-formatter' && <XmlFormatterTool client:load />}
+  {slug === 'duplicate-line-remover' && <DuplicateLineRemover client:load />}
+  {slug === 'number-base-converter' && <NumberBaseConverter client:load />}
+  {slug === 'word-character-counter' && <WordCharCounter client:load />}
+  {slug === 'fetchxml-formatter' && <FetchXmlFormatter client:load />}
+  {slug === 'odata-filter-builder' && <ODataFilterBuilder client:load />}
+  <Fragment slot="article">
+    <Content />
+  </Fragment>
+</ToolShell>

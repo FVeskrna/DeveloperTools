@@ -1,0 +1,41 @@
+---
+title: "Duplicate Line Remover"
+slug: "duplicate-line-remover"
+no: 6
+category: "text"
+description: "Remove duplicate lines from any list with trim, case-insensitive, and sort options, plus line-count stats."
+keywords: ["remove duplicate lines", "duplicate line remover", "dedupe list online", "unique lines", "remove duplicates from list"]
+version: "1.0"
+added: 2026-07-02
+relatedTools: ["word-character-counter", "regex-tester", "yaml-json-converter"]
+faq:
+  - q: "Which duplicate is kept — the first or the last?"
+    a: "The first occurrence wins and keeps its original position (unless you enable sorting). This matches the behavior of awk '!seen[$0]++' that shell users expect."
+  - q: "Can I paste sensitive lists like emails or license keys?"
+    a: "Yes. Deduplication happens in your browser's memory and nowhere else. Nothing is uploaded — the tool works offline."
+  - q: "How is this different from sort -u?"
+    a: "sort -u reorders your list as a side effect. Here, deduplication and sorting are independent: keep the original order, or explicitly choose A→Z / Z→A. Sorting is natural-aware, so item2 sorts before item10."
+  - q: "Does 'ignore case' change the output text?"
+    a: "No — it only affects comparison. If both Charlie@example.com and charlie@example.com appear, the first spelling encountered is kept as-is."
+  - q: "Is there a size limit?"
+    a: "No hard limit. Lists in the hundreds of thousands of lines process in well under a second on a typical machine, since the work is a single hash-set pass."
+---
+
+## What it does
+
+Paste a list, get the same list without duplicates — with live stats on how many lines came in, went out, and were removed. Trimming, case-insensitive comparison, empty-line removal, and optional sorting are all one checkbox away.
+
+## Examples
+
+**Merging two email lists.** Concatenate both exports, paste, enable TRIM and IGNORE CASE. `alpha@example.com` and `  Alpha@example.com ` collapse into one entry, and the stats line tells you exactly how much overlap the lists had.
+
+**Cleaning a log's unique error messages.** Grep output pasted here with SORT A→Z gives you a deduplicated, alphabetized inventory of distinct errors — a poor man's `sort | uniq` without leaving the browser.
+
+**Deduplicating package lists.** Two `requirements.txt` files combined, deduped in original order, ready to commit.
+
+## Edge cases & notes
+
+- **Trim runs before comparison and output** — enabled, lines are compared *and emitted* trimmed. Disable it to treat `foo` and `foo ` as different lines and preserve exact whitespace.
+- **Empty-line handling is explicit**: DROP EMPTY LINES removes them entirely; with it off, the first empty line is kept and later ones are treated as duplicates of it.
+- **Sorting is locale-aware and numeric-smart** (`localeCompare` with `numeric: true`), so `line2` precedes `line10` — unlike plain byte sort.
+- Windows (`\r\n`) and Unix (`\n`) line endings are both understood; output uses `\n`.

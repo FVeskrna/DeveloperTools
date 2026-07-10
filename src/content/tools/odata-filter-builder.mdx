@@ -1,0 +1,65 @@
+---
+title: "OData Filter Builder"
+slug: "odata-filter-builder"
+no: 10
+category: "dynamics-365"
+description: "Build Dataverse Web API $filter strings from visual condition rows that handle quoting, operators, and functions correctly."
+keywords: ["odata filter builder", "dataverse web api filter", "dynamics 365 odata", "$filter dataverse", "odata query dynamics", "web api filter builder"]
+version: "1.0"
+added: 2026-07-06
+relatedTools: ["fetchxml-formatter", "regex-tester", "unix-timestamp-converter"]
+faq:
+  - q: "Why is my GUID filter failing with a 400 error?"
+    a: "In the Dataverse Web API, GUIDs are unquoted: statecode eq 0 and _parentcustomerid_value eq a1b2c3d4-… — no quotes, no guid'…' prefix. Set the value type to guid in the builder and it emits the correct form."
+  - q: "How do I filter on a lookup field?"
+    a: "Use the _fieldname_value virtual attribute, e.g. _primarycontactid_value eq <guid>. Filtering on primarycontactid directly returns an error — the underscore form is how the Web API exposes lookup GUIDs."
+  - q: "How are apostrophes in string values handled?"
+    a: "Doubled, per the OData spec: name eq 'O''Brien'. The builder escapes this automatically when the value type is string — a common source of hand-built 400 errors."
+  - q: "Does this cover Dataverse query functions like Microsoft.Dynamics.CRM.LastXDays?"
+    a: "Not in the row builder — those use a different call syntax (Microsoft.Dynamics.CRM.LastXDays(PropertyName='createdon',PropertyValue=7)). The generated expression is standard OData you can extend with them by hand; the operator table below lists the common ones."
+  - q: "Is anything sent to my Dataverse environment?"
+    a: "No. The tool only builds the string. Nothing is executed, and your field names and values stay in the browser."
+---
+
+## What it does
+
+Compose Dataverse Web API `$filter` expressions from visual condition rows — field, operator, value, and value type — combined with `and`/`or`. The builder handles the quoting rules that cause most hand-written 400 errors: strings quoted with doubled apostrophes, GUIDs and numbers bare, functions like `contains()` wrapped correctly.
+
+## Examples
+
+**Active accounts containing "contoso".** The pre-filled rows produce:
+
+```text
+$filter=statecode eq 0 and contains(name,'contoso')
+```
+
+**Open opportunities above a threshold, by owner.** Rows: `statecode eq 0` (number), `estimatedvalue ge 50000` (number), `_ownerid_value eq 5f1c…` (guid) →
+
+```text
+$filter=statecode eq 0 and estimatedvalue ge 50000 and _ownerid_value eq 5f1c...
+```
+
+**Contacts with no email.** Operator `is null` needs no value: `emailaddress1 eq null`.
+
+## Operator reference
+
+| Operator | OData form | Example |
+| --- | --- | --- |
+| equals | `eq` | `statecode eq 0` |
+| not equals | `ne` | `statuscode ne 2` |
+| greater / less | `gt`, `ge`, `lt`, `le` | `revenue gt 100000` |
+| contains | `contains(f,'v')` | `contains(name,'ltd')` |
+| does not contain | `not contains(f,'v')` | `not contains(name,'test')` |
+| starts / ends with | `startswith`, `endswith` | `startswith(name,'A')` |
+| null check | `eq null` / `ne null` | `emailaddress1 ne null` |
+| lookup equals | `_field_value eq guid` | `_ownerid_value eq a1b2…` |
+| date on/after | `ge` with ISO date | `createdon ge 2026-01-01T00:00:00Z` |
+| last N days | `Microsoft.Dynamics.CRM.LastXDays` | `Microsoft.Dynamics.CRM.LastXDays(PropertyName='createdon',PropertyValue=7)` |
+
+## Edge cases & notes
+
+- **Option set values are numbers** — `statuscode eq 1`, never `'1'`. Quoting them is the second most common 400 after quoted GUIDs.
+- **Dates** compare as ISO 8601 UTC literals without quotes: `createdon ge 2026-07-01T00:00:00Z`. For date-only ("on this day") semantics prefer the CRM query functions, which respect the user's time zone.
+- **Grouping**: the builder combines all rows with a single `and`/`or`. For mixed logic like `A and (B or C)`, generate the `or` group, then parenthesize and combine by hand — OData honors parentheses.
+- **URL encoding**: when pasting into a raw HTTP request, encode spaces as `%20` (the example line under the output shows the encoded form). Client libraries and the browser's `fetch` handle this for you.
+- Standard OData `$filter` works the same against any Web API endpoint — the conventions here (bare GUIDs, `_value` lookups) are the Dataverse-specific parts.

@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { CATEGORIES, SITE_NAME, SITE_TAGLINE, SITE_URL } from '../config';
+
+const tools = (await getCollection('tools')).sort((a, b) => a.data.no - b.data.no);
+const categories = Object.entries(CATEGORIES).filter(([key]) =>
+  tools.some((t) => t.data.category === key),
+);
+
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_TAGLINE,
+};
+
+const title = `${SITE_NAME} — free developer tools that run in your browser`;
+const description =
+  'Free developer tools that run in your browser: regex tester, YAML/JSON converter, SQL formatter, timestamp converter, and more.';
+---
+
+<Base title={title} description={description} path="/" jsonLd={[websiteLd]}>
+  <div class="container-880">
+    <h1 class="pt-8 pb-2" style="font-size: 22px;">Free developer tools that run in your browser</h1>
+
+    <section id="tools" aria-label="All tools">
+      {
+        categories.map(([key, label]) => (
+          <div id={`cat-${key}`} class="pt-6">
+            <h2 class="ui-label mb-3">{label.toUpperCase()}</h2>
+            <div class="grid gap-3 sm:grid-cols-2">
+              {tools
+                .filter((t) => t.data.category === key)
+                .map((t) => (
+                  <a class="tool-card" href={`/tools/${t.data.slug}/`}>
+                    <span class="tool-card-title">{t.data.title}</span>
+                    <p>{t.data.description}</p>
+                  </a>
+                ))}
+            </div>
+          </div>
+        ))
+      }
+    </section>
+
+    <section class="hairline-t mt-14 pt-6 pb-2" aria-label="About this site">
+      <h2 style="font-size: 15px;">Private by design</h2>
+      <p class="ink-secondary mt-2" style="max-width: 640px; font-size: 14px;">
+        Every tool on this site runs entirely inside your browser tab — nothing you paste is
+        uploaded, logged, or stored. No accounts, no cookies, and each tool keeps working offline
+        once the page is loaded.
+      </p>
+    </section>
+  </div>
+</Base>

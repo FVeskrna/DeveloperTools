@@ -1,0 +1,41 @@
+---
+title: "XML Formatter & Validator"
+slug: "xml-formatter"
+no: 5
+category: "data"
+description: "Pretty-print, minify, and validate XML with exact error line reporting, including CDATA sections, comments, and namespaces."
+keywords: ["xml formatter", "xml validator", "pretty print xml", "xml beautifier", "minify xml", "xml syntax checker"]
+version: "1.0"
+added: 2026-07-01
+relatedTools: ["fetchxml-formatter", "yaml-json-converter", "sql-formatter"]
+faq:
+  - q: "What does 'well-formed' mean, and is it the same as 'valid'?"
+    a: "Well-formed means the syntax is correct: tags nest and close properly, attributes are quoted, entities are legal. Valid additionally means conforming to a DTD or XSD schema. This tool checks well-formedness — the thing that breaks parsers — not schema validity."
+  - q: "How accurate is the error line number?"
+    a: "It comes straight from your browser's native XML parser, which reports the line and often the column of the first fatal error. Fix that one and re-check; XML parsers stop at the first error by design."
+  - q: "Is CDATA preserved?"
+    a: "Yes. CDATA sections pass through byte-for-byte, and comments and processing instructions are kept in place in both pretty and minified output."
+  - q: "Can I use this for large files?"
+    a: "Files up to a few megabytes format quickly. Everything runs in browser memory, so extremely large exports (50 MB+) are better handled by command-line tools like xmllint."
+  - q: "Does minifying XML change its meaning?"
+    a: "Whitespace between elements is removed, which is safe for data XML. For document formats where whitespace is significant (mixed content), prefer pretty-print, which preserves text content."
+---
+
+## What it does
+
+Paste XML to pretty-print it with your chosen indentation, minify it to a single line, or just check that it parses. Malformed input gets a precise error with the line number from the browser's native parser — the same parser your JavaScript would use.
+
+## Examples
+
+**An unreadable SOAP response.** One long line of `<soap:Envelope>…` becomes an indented tree where you can actually find the fault code. Namespaced tags are preserved exactly.
+
+**Minifying a config for embedding.** Pretty XML minifies to a single line with inter-element whitespace stripped — handy for stuffing into a JSON string field or an environment variable.
+
+**Finding the break.** Delete a closing tag from a 40-line document and the status flips to NOT WELL-FORMED with the offending line number, e.g. `LINE 23: Opening and ending tag mismatch`.
+
+## Edge cases & notes
+
+- **The XML declaration** (`<?xml version="1.0"?>`) is preserved from your input if present; the DOM parser itself discards it, so the tool re-attaches the original.
+- **Attribute order** is kept as written. XML semantics say order doesn't matter, but diffs are cleaner when it's stable.
+- **Entity references** like `&amp;` are decoded on parse and re-escaped on output — `&#38;` becomes `&amp;`, which is equivalent.
+- Elements with no content are self-closed (`<spec />`), the conventional compact form.

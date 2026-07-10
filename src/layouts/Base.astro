@@ -1,0 +1,183 @@
+---
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '@fontsource/ibm-plex-mono/600.css';
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '../styles/tokens.css';
+// Preload the fonts on the first-paint critical path (plate h1 + body text).
+import monoSemibold from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600-normal.woff2?url';
+import monoMedium from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500-normal.woff2?url';
+import monoRegular from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2?url';
+import sansRegular from '@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2?url';
+import { SITE_NAME, SITE_URL } from '../config';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path beginning with "/" used for the canonical URL. */
+  path: string;
+  /** Pre-built JSON-LD objects, rendered as separate script tags. */
+  jsonLd?: object[];
+  noindex?: boolean;
+}
+
+const { title, description, path, jsonLd = [], noindex = false } = Astro.props;
+const canonical = new URL(path, SITE_URL).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="preload" as="font" type="font/woff2" href={monoSemibold} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={monoMedium} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={monoRegular} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={sansRegular} crossorigin />
+    <link
+      rel="icon"
+      href={`data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" fill="none" stroke="#2038E6" stroke-width="2"/><rect x="5" y="5" width="6" height="6" fill="#2038E6"/></svg>')}`}
+    />
+    <script is:inline>
+      // Theme init before first paint — no flash of wrong theme.
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    {jsonLd.map((obj) => <script is:inline type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+    <!-- Analytics slot (Plausible). Uncomment when a domain exists.
+    <script defer data-domain="exacttools.example" src="https://plausible.io/js/script.js"></script>
+    -->
+  </head>
+  <body>
+    <header class="hairline-b">
+      <div class="container-880 flex items-baseline justify-between py-4">
+        <a
+          href="/"
+          class="!text-[var(--ink)] font-semibold tracking-tight"
+          style="font-family: var(--font-mono); font-size: 15px;"
+        >
+          {SITE_NAME}<span class="ink-secondary">.dev</span>
+        </a>
+        <div class="flex items-center gap-5">
+          <a href="/#tools" class="ui-label !text-[var(--ink-secondary)] hover:!text-[var(--accent)]">Tools</a>
+          <button id="theme-toggle" class="btn" type="button" aria-label="Toggle dark mode">
+            <svg
+              class="icon-moon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+            <svg
+              class="icon-sun"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              ><circle cx="12" cy="12" r="4"></circle><path
+                d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+              ></path></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="hairline-t mt-16">
+      <div class="container-880 py-8 flex flex-wrap justify-between gap-4">
+        <p class="ui-label">
+          All tools run entirely in your browser — no data leaves the page.
+        </p>
+        <p class="ui-label">{SITE_NAME} · {new Date().getFullYear()}</p>
+      </div>
+    </footer>
+
+    <script is:inline>
+      (function () {
+        // Theme toggle (icon swap is pure CSS via the .dark class)
+        var btn = document.getElementById('theme-toggle');
+        if (btn) {
+          btn.addEventListener('click', function () {
+            var dark = document.documentElement.classList.toggle('dark');
+            try {
+              localStorage.setItem('theme', dark ? 'dark' : 'light');
+            } catch (e) {}
+          });
+        }
+
+        // Konami code → Engineer Mode: blueprint grid + measured per-page JS
+        // weight, bottom-right. Session-only, persists nothing.
+        var toggleEngineer = function () {
+          var on = document.documentElement.classList.toggle('engineer');
+          var hud = document.getElementById('engineer-hud');
+          if (!on) {
+            if (hud) hud.remove();
+            return;
+          }
+          if (!hud) {
+            hud = document.createElement('div');
+            hud.id = 'engineer-hud';
+            document.body.appendChild(hud);
+          }
+          var js = performance.getEntriesByType('resource').filter(function (r) {
+            return /\.js(\?|$)/.test(r.name);
+          });
+          var bytes = js.reduce(function (a, r) {
+            return a + (r.transferSize || r.encodedBodySize || 0);
+          }, 0);
+          hud.textContent = 'JS ' + (bytes / 1024).toFixed(1) + ' KB · ' + js.length + ' FILES';
+        };
+        var seq = [
+          'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+          'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a',
+        ];
+        var pos = 0;
+        document.addEventListener('keydown', function (e) {
+          var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+          pos = k === seq[pos] ? pos + 1 : k === seq[0] ? 1 : 0;
+          if (pos === seq.length) {
+            pos = 0;
+            toggleEngineer();
+          }
+        });
+
+        // Console note
+        console.log(
+          '%cCurious? Good instinct. Everything here runs client-side — check the Network tab.',
+          'font-family: "IBM Plex Mono", monospace;'
+        );
+      })();
+    </script>
+  </body>
+</html>

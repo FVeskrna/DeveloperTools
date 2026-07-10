@@ -1,0 +1,52 @@
+---
+title: "FetchXML Formatter"
+slug: "fetchxml-formatter"
+no: 9
+category: "dynamics-365"
+description: "Format Dynamics 365 / Dataverse FetchXML queries with aligned attributes and copy the result as an escaped C# verbatim string."
+keywords: ["fetchxml formatter", "format fetchxml", "fetchxml beautifier", "dynamics 365 fetchxml", "dataverse fetchxml", "fetchxml to c#"]
+version: "1.0"
+added: 2026-07-05
+relatedTools: ["odata-filter-builder", "xml-formatter", "sql-formatter"]
+faq:
+  - q: "What does COPY AS C# STRING produce?"
+    a: "A verbatim string literal (@\"…\") with every double quote doubled, assigned to a fetchXml variable — paste it straight into a plugin or console app and pass it to RetrieveMultiple with new FetchExpression(fetchXml). Formatting and line breaks are preserved for readability in code."
+  - q: "Does the formatter validate my FetchXML against the schema?"
+    a: "It validates well-formedness (XML syntax) with exact line numbers, but not the Fetch schema itself — an element like <fitler> won't be flagged. Dataverse returns a clear error for schema violations; this tool catches the syntax errors first."
+  - q: "Why align attributes?"
+    a: "FetchXML is attribute-heavy: a condition element routinely carries attribute, operator, and value. Aligning them vertically makes a 40-line query scannable in code review, where the default single-line style hides the operator you're looking for."
+  - q: "Where do I get FetchXML from in the first place?"
+    a: "Advanced Find (legacy) or the modern 'Edit filters' → Download FetchXML in model-driven apps, the FetchXML Builder in XrmToolBox, or by converting a saved view's layoutxml/fetchxml columns. Paste any of them here."
+  - q: "Is my query data safe to paste?"
+    a: "Yes. Formatting runs entirely in your browser — queries that reference your org's schema names or filter values are never transmitted anywhere."
+---
+
+## What it does
+
+Pretty-prints FetchXML with an attribute-alignment mode designed for how FetchXML is actually written: one attribute per line, lined up under the first, so `attribute`, `operator`, and `value` on your `<condition>` elements read like a table. One click copies the result as an escaped C# verbatim string for plugins and integration code.
+
+## Examples
+
+**A query from Advanced Find.** The pre-filled sample — accounts over 100k revenue with an outer join to the primary contact — arrives as one dense line. Formatted with alignment on, every `<condition>` and `<link-entity>` becomes individually readable, and the `alias` you need to reference in code (`pc.emailaddress1`) is easy to spot.
+
+**Embedding in a plugin.** Press COPY AS C# STRING and paste:
+
+```csharp
+var fetchXml = @"
+<fetch top=""50"">
+  <entity name=""account"">
+    ...
+";
+var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
+```
+
+The doubled quotes are already handled — the classic copy-paste error (a stray unescaped `"` breaking the literal) can't happen.
+
+**Reviewing a colleague's aggregation query.** Aligned attributes make it obvious when a `<condition>` uses `operator="on-or-after"` where the spec asked for `"on-or-before"` — the operators line up in a single column.
+
+## Edge cases & notes
+
+- **Line-number errors** come from the browser's native XML parser: an unclosed `<filter>` in a pasted query is reported with the exact line, which beats Dataverse's generic "Malformed FetchXML" server response.
+- **`{0}` placeholders** used with `string.Format` survive untouched; remember that in a C# verbatim string `{` needs no escaping (that's interpolated strings, `$@"…"`).
+- **Attribute order is preserved**, so `uitype`/`uiname` attributes some designers emit stay where they were.
+- The escaped C# output targets classic verbatim strings; for C# 11+ you can also paste the plain formatted XML into a raw string literal (`"""…"""`) with no escaping at all.

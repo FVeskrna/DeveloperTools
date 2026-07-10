@@ -1,0 +1,41 @@
+---
+title: "YAML to JSON Converter"
+slug: "yaml-json-converter"
+no: 2
+category: "data"
+description: "Convert YAML to JSON and JSON to YAML instantly, with formatted output and exact error line reporting in both directions."
+keywords: ["yaml to json", "json to yaml", "yaml converter", "convert yaml to json online", "yaml json converter"]
+version: "1.0"
+added: 2026-06-28
+relatedTools: ["xml-formatter", "sql-formatter", "regex-tester"]
+faq:
+  - q: "Does the converter support both directions?"
+    a: "Yes. Toggle between YAML → JSON and JSON → YAML, or press 'use output as input' to round-trip a document and verify nothing is lost."
+  - q: "Is my configuration data safe to paste here?"
+    a: "Yes. Conversion runs entirely in your browser using the js-yaml library — secrets in your config never leave the tab. It works with the network disconnected."
+  - q: "Why did my unquoted value change type after conversion?"
+    a: "YAML guesses types: 'no' becomes false in YAML 1.1 parsers, '3.10' becomes the number 3.1, and country code 'NO' can turn into a boolean. Quote values in your YAML to keep them as strings."
+  - q: "Are comments preserved?"
+    a: "No. JSON has no comment syntax, so YAML comments are dropped in conversion — this is a limitation of the formats, not the tool."
+  - q: "What YAML version is supported?"
+    a: "YAML 1.2 via js-yaml's default schema, which covers the overwhelming majority of real-world documents: Kubernetes manifests, CI pipelines, docker-compose files, and OpenAPI specs."
+---
+
+## What it does
+
+Paste YAML on one side and get equivalent, pretty-printed JSON on the other — or flip the direction for JSON to YAML. Errors are reported with the exact line number, so a bad indent in a 300-line Kubernetes manifest takes seconds to find instead of minutes.
+
+## Examples
+
+**Kubernetes manifest → JSON for an API call.** Deployment YAML converts directly to the JSON body that `kubectl` would send. Nested maps become objects, `env:` lists become arrays, and `value: 4500` stays a number.
+
+**JSON API response → YAML for a config file.** Paste a response payload and flip the direction: you get clean, 2-space-indented YAML without quotes around keys — ready to drop into a Helm values file.
+
+**Debugging a broken pipeline file.** A tab character or a mis-indented list item in `.gitlab-ci.yml` produces a parse error with the line number, typically something like `LINE 14: bad indentation of a mapping entry`.
+
+## Edge cases & notes
+
+- **Type coercion is the classic YAML trap**: unquoted `yes`, `on`, `3.10`, or `012345` may not survive as the strings you intended. The converter shows you exactly what a parser sees — which is often the fastest way to spot the problem.
+- **Anchors and aliases** (`&base`, `*base`) are resolved and expanded in the JSON output; the deduplication is lost, but the data is equivalent.
+- **Multi-document streams** (`---` separators) are not supported; convert one document at a time.
+- JSON → YAML output uses a 100-character line width and block style for readability.

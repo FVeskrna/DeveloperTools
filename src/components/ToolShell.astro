@@ -1,0 +1,103 @@
+---
+import Base from '../layouts/Base.astro';
+import AdSlot from './AdSlot.astro';
+import { CATEGORIES, SITE_URL } from '../config';
+import type { CollectionEntry } from 'astro:content';
+
+type ToolData = CollectionEntry<'tools'>['data'];
+
+interface Props {
+  tool: ToolData;
+  related: ToolData[];
+}
+
+const { tool, related } = Astro.props;
+const categoryLabel = CATEGORIES[tool.category] ?? tool.category;
+const path = `/tools/${tool.slug}/`;
+const url = new URL(path, SITE_URL).href;
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: tool.title,
+  url,
+  description: tool.description,
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any (runs in the browser)',
+  browserRequirements: 'Requires JavaScript',
+  softwareVersion: tool.version,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: tool.faq.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+const pageTitle = `${tool.title} — free, instant, private`;
+---
+
+<Base title={pageTitle} description={tool.description} path={path} jsonLd={[softwareLd, faqLd]}>
+  <div class="container-880">
+    <nav class="ui-label py-3" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="ink-secondary">/</span>
+      <a href={`/#cat-${tool.category}`}>{categoryLabel}</a>
+      <span class="ink-secondary">/</span>
+      <span aria-current="page">{tool.title}</span>
+    </nav>
+
+    <header class="hairline-b mt-4 pb-5">
+      <h1>{tool.title}</h1>
+      <p class="ink-secondary mt-2" style="max-width: 640px;">{tool.description}</p>
+    </header>
+
+    <section class="mt-6" aria-label={`${tool.title} tool`}>
+      <slot />
+    </section>
+
+    <p class="ink-secondary mt-5" style="font-size: 13px;">
+      All processing happens in your browser — nothing you enter is uploaded or stored.
+    </p>
+
+    <AdSlot id="a" />
+
+    <details class="notes mt-14">
+      <summary>Guide, examples & FAQ</summary>
+      <div class="article pt-2 pb-4">
+        <slot name="article" />
+
+        <h2>FAQ</h2>
+        {
+          tool.faq.map((f) => (
+            <section>
+              <h3>{f.q}</h3>
+              <p>{f.a}</p>
+            </section>
+          ))
+        }
+      </div>
+    </details>
+
+    {
+      related.length > 0 && (
+        <p class="ui-label hairline-t mt-0 pt-4">
+          RELATED:&ensp;
+          {related.map((r, i) => (
+            <>
+              {i > 0 && <span class="ink-secondary">&ensp;·&ensp;</span>}
+              <a href={`/tools/${r.slug}/`}>{r.title}</a>
+            </>
+          ))}
+        </p>
+      )
+    }
+
+    <AdSlot id="b" />
+  </div>
+</Base>

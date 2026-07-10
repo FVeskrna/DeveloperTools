@@ -1,0 +1,41 @@
+---
+title: "Unix Timestamp Converter"
+slug: "unix-timestamp-converter"
+no: 3
+category: "converters"
+description: "Convert Unix timestamps to human-readable dates and back, with a live epoch clock, time zone selection, and relative time."
+keywords: ["unix timestamp converter", "epoch converter", "timestamp to date", "unix time", "epoch to date", "date to epoch"]
+version: "1.0"
+added: 2026-06-29
+relatedTools: ["number-base-converter", "word-character-counter", "yaml-json-converter"]
+faq:
+  - q: "How does the tool know if my timestamp is seconds or milliseconds?"
+    a: "In auto-detect mode, values of 13 or more digits (≥ 10^12) are treated as milliseconds — that magnitude as seconds would be a date after the year 33658. You can force the unit with the dropdown."
+  - q: "Which time zones can I convert into?"
+    a: "Every IANA zone your browser knows — typically 400+, including UTC and your local zone, using the browser's own Intl database so DST rules are always current."
+  - q: "What is the year 2038 problem?"
+    a: "Systems storing Unix time in a signed 32-bit integer overflow on 2038-01-19 at 03:14:07 UTC. This tool uses 64-bit floating point via JavaScript's Date, so it handles dates far beyond 2038."
+  - q: "Does the converter handle negative timestamps?"
+    a: "Yes. Negative epochs are dates before 1970-01-01 UTC; -86400 is December 31, 1969. The valid range extends to ±100,000,000 days around the epoch."
+  - q: "Is anything sent to a server?"
+    a: "No. The clock, conversion, and time zone math all run in your browser. The page keeps working with the network cable pulled."
+---
+
+## What it does
+
+Convert an epoch timestamp to a readable date in any time zone, or parse a date string back into epoch seconds and milliseconds. A live ticker shows the current Unix time, and every conversion includes ISO 8601, your chosen zone with UTC offset, and a plain-English relative time ("5 months ago").
+
+## Examples
+
+**Reading a database timestamp.** `1735689600` converts to `2025-01-01T00:00:00.000Z` — and to `Wed, 01 Jan 2025, 01:00:00 GMT+1` if you pick `Europe/Prague`. The relative line tells you at a glance it's over a year in the past.
+
+**A JavaScript timestamp from `Date.now()`.** `1751804000000` is 13 digits, so auto-detect treats it as milliseconds — no need to trim three zeros before pasting.
+
+**Scheduling a config value.** Type `2026-12-31T23:59:00Z` in the date field to get `1798761540` seconds for a cron-adjacent config or a JWT `exp` claim.
+
+## Edge cases & notes
+
+- **Time zone ≠ offset.** `Europe/Prague` is +01:00 in winter and +02:00 in summer; the converter applies the correct historical DST rule for the specific instant, which a fixed offset cannot do.
+- **Date-only strings** like `2026-07-06` are interpreted as midnight **UTC** per the ISO 8601 spec — not local midnight. Add an explicit time and offset to avoid ambiguity.
+- **Leap seconds** do not exist in Unix time; it counts 86,400 seconds per day, always. The 27 leap seconds since 1972 are invisible here, as they are to your database.
+- The parser accepts ISO 8601 and RFC 2822 (`Mon, 06 Jul 2026 12:00:00 GMT`); ambiguous regional formats like `07/06/2026` are best avoided.

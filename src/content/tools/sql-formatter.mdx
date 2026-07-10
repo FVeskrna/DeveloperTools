@@ -1,0 +1,41 @@
+---
+title: "SQL Formatter"
+slug: "sql-formatter"
+no: 4
+category: "data"
+description: "Format and beautify SQL instantly with dialect-aware rules for PostgreSQL, MySQL, T-SQL, BigQuery, and more."
+keywords: ["sql formatter", "format sql", "sql beautifier", "pretty print sql", "postgresql formatter", "tsql formatter"]
+version: "1.0"
+added: 2026-06-30
+relatedTools: ["yaml-json-converter", "xml-formatter", "regex-tester"]
+faq:
+  - q: "Which SQL dialects are supported?"
+    a: "Standard SQL, PostgreSQL, MySQL, MariaDB, SQLite, T-SQL (SQL Server), PL/SQL (Oracle), BigQuery, Snowflake, and Trino/Presto. Picking the right dialect matters for quoting styles, operators like ::, and dialect-specific keywords."
+  - q: "Is my SQL sent to a server?"
+    a: "No. Formatting runs on the sql-formatter JavaScript library inside your browser. Queries containing table names, credentials in connection strings, or customer data never leave the tab."
+  - q: "Does it validate my SQL?"
+    a: "No — it's a formatter, not a linter. It tokenizes and re-indents; a query can format beautifully and still fail at the database. Syntax the tokenizer can't process at all will show an error."
+  - q: "Will formatting change what my query returns?"
+    a: "No. Only whitespace and (optionally) keyword casing change. String literals, identifiers, and comments pass through untouched."
+  - q: "Can it format multiple statements at once?"
+    a: "Yes. Statements separated by semicolons are each formatted and separated by a blank line."
+---
+
+## What it does
+
+Turn a single-line query from a log or an ORM into readable, consistently indented SQL. Pick the dialect, indentation width, and keyword casing; the result updates as you type, entirely in-browser.
+
+## Examples
+
+**A logged query, unwrapped.** The pre-filled sample — a `SELECT` with two joins, `GROUP BY`, and `HAVING` crammed onto one line — becomes a query where each clause and join condition sits on its own line. Code review-ready.
+
+**T-SQL from SQL Server Profiler.** Switch the dialect to T-SQL and square-bracket identifiers like `[dbo].[Orders]` and `TOP (20)` format correctly.
+
+**BigQuery with backticks.** Dialect: BigQuery. Backtick-quoted project paths (`` `project.dataset.table` ``) and `STRUCT` types are understood and kept intact.
+
+## Edge cases & notes
+
+- **Dialect matters more than it looks**: PostgreSQL's `::` casts, MySQL's backticks, and T-SQL's `@variables` each tokenize differently. If output looks mangled, check the dialect first.
+- **Comments are preserved** — both `-- line` and `/* block */` styles stay attached to the statement they precede.
+- **`keywordCase: preserve`** leaves casing exactly as written, useful when your style guide is lowercase keywords.
+- Extremely long `IN (…)` lists are wrapped; this is by design and does not affect execution.

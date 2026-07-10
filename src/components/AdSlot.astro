@@ -1,0 +1,20 @@
+---
+/**
+ * Reserved ad container. No ad code exists anywhere in the repo; when
+ * ADS_ENABLED is flipped the slot merely reserves layout space.
+ */
+import { ADS_ENABLED } from '../config';
+
+interface Props {
+  id: 'a' | 'b';
+}
+const { id } = Astro.props;
+---
+
+<div
+  class="ad-slot"
+  data-ad-slot={id}
+  aria-hidden="true"
+  style={ADS_ENABLED ? 'min-height: 90px; margin-top: 40px;' : 'min-height: 0;'}
+>
+</div>

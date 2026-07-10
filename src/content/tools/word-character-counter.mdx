@@ -1,0 +1,41 @@
+---
+title: "Word & Character Counter"
+slug: "word-character-counter"
+no: 8
+category: "text"
+description: "Count words, characters, sentences, and paragraphs with reading and speaking time estimates that update on every keystroke."
+keywords: ["word counter", "character counter", "count words online", "sentence counter", "reading time calculator", "character count"]
+version: "1.0"
+added: 2026-07-04
+relatedTools: ["duplicate-line-remover", "regex-tester", "unix-timestamp-converter"]
+faq:
+  - q: "What counts as a word?"
+    a: "Any run of non-whitespace characters. Hyphenated compounds like 'client-side' count as one word; 'a — b' counts the dash as a word, matching how most word processors behave."
+  - q: "How is reading time calculated?"
+    a: "Words ÷ 200 per minute, the widely used average for adult silent reading of general text. Speaking time uses 130 wpm, a comfortable presentation pace. Both are estimates — technical material reads slower."
+  - q: "Do characters include spaces and line breaks?"
+    a: "The CHARACTERS tile counts everything including whitespace; CHARS (NO SPACES) strips all whitespace. Both count Unicode characters as your browser sees them."
+  - q: "How are sentences detected?"
+    a: "By terminal punctuation (., !, ?, …) followed by a space or end of text. Abbreviations like 'e.g.' can inflate the count slightly — treat it as a close estimate, not a grammar parse."
+  - q: "Can I paste confidential drafts here?"
+    a: "Yes. Counting happens in your browser only; the text is never transmitted or stored. Close the tab and it's gone."
+---
+
+## What it does
+
+Paste or type text and watch eight counters update on every keystroke: words, characters (with and without spaces), sentences, paragraphs, lines, plus estimated reading and speaking time. No buttons to press, nothing uploaded.
+
+## Examples
+
+**Fitting a meta description.** SEO descriptions should stay under ~155 characters. Type it here and watch the CHARACTERS tile — no more counting by hand or publishing to find it truncated.
+
+**Checking an abstract against a limit.** Conference limit: 250 words. Paste the draft; the WORDS tile answers instantly, and SENTENCES helps spot the 60-word monster sentence dragging your average up.
+
+**Timing a conference talk.** A 2,600-word script shows exactly 20 minutes of speaking time at 130 wpm — right at the limit of a 20-minute slot, so you know to cut before rehearsal, not during.
+
+## Edge cases & notes
+
+- **Unicode:** counts are per UTF-16 code unit, the same measure JavaScript's `length` and most form `maxlength` attributes use. Some emoji and rare scripts count as 2.
+- **Paragraphs** are blocks separated by blank lines; consecutive newlines without content don't create empty paragraphs.
+- **Reading speed varies** — 200 wpm suits prose; expect ~150 for dense technical documentation and ~250 for light fiction.
+- The counter handles book-length texts (500k+ characters) without lag; computation is a single linear pass.
