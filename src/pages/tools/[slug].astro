@@ -13,6 +13,7 @@ import NumberBaseConverter from '../../components/tools/NumberBaseConverter';
 import WordCharCounter from '../../components/tools/WordCharCounter';
 import FetchXmlFormatter from '../../components/tools/FetchXmlFormatter';
 import ODataFilterBuilder from '../../components/tools/ODataFilterBuilder';
+import JwtDecoder from '../../components/tools/JwtDecoder';
 
 const KNOWN_SLUGS = [
   'regex-tester',
@@ -25,6 +26,7 @@ const KNOWN_SLUGS = [
   'word-character-counter',
   'fetchxml-formatter',
   'odata-filter-builder',
+  'jwt-decoder',
 ];
 
 export async function getStaticPaths() {
@@ -60,6 +62,7 @@ if (!KNOWN_SLUGS.includes(slug)) {
   {slug === 'word-character-counter' && <WordCharCounter client:load />}
   {slug === 'fetchxml-formatter' && <FetchXmlFormatter client:load />}
   {slug === 'odata-filter-builder' && <ODataFilterBuilder client:load />}
+  {slug === 'jwt-decoder' && <JwtDecoder client:load />}
   <Fragment slot="article">
     <Content />
   </Fragment>

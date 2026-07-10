@@ -1,0 +1,43 @@
+---
+title: "JWT Decoder"
+slug: "jwt-decoder"
+no: 11
+category: "data"
+description: "Decode JWT header and payload with readable timestamps for exp, iat, and nbf claims and an expiry check. Free, in-browser, decode only."
+keywords: ["jwt decoder", "decode jwt", "jwt debugger", "jwt payload viewer", "json web token decoder", "jwt expiry check"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["base64-encoder-decoder", "unix-timestamp-converter", "url-encoder-decoder"]
+faq:
+  - q: "Is it safe to paste a JWT here?"
+    a: "Yes — decoding happens entirely in your browser; the token is never transmitted, logged, or stored, and the page works offline. That said, treat production access tokens with care anywhere: a JWT is a bearer credential, so prefer expired or test tokens when you just need to inspect the structure."
+  - q: "Does this tool verify the signature?"
+    a: "No, and it says so on the page. Verification requires the signing secret or public key; this tool only base64url-decodes the header and payload. A token that decodes cleanly can still be forged — only your backend, holding the key, can decide whether to trust it."
+  - q: "Why can I read the payload without any key?"
+    a: "JWTs are signed, not encrypted. The header and payload are just base64url-encoded JSON — anyone holding the token can read them. Never put secrets in JWT claims; if you need confidentiality, that's what JWE (encrypted JWTs) is for."
+  - q: "What do exp, iat, and nbf mean?"
+    a: "They're Unix timestamps in seconds: iat is when the token was issued, nbf is the earliest moment it's valid, and exp is when it expires. The decoder converts each to a readable UTC time and shows whether the token is currently inside its valid window, judged against your computer's clock."
+  - q: "Why does my token fail to decode?"
+    a: "The most common causes: it isn't a complete token (a JWT has exactly three dot-separated parts), it was wrapped or truncated by an email client or log viewer, or it's an opaque/reference token rather than a JWT. The error message tells you which part failed and why."
+---
+
+## What it does
+
+Paste a JSON Web Token and see its decoded header and payload as formatted JSON, with the standard claims explained: `exp`, `iat`, and `nbf` are shown as readable UTC timestamps with relative time, and a status line tells you whether the token is currently valid, not yet valid, or expired. The signature is displayed raw and explicitly **not verified** — this is an inspection tool, not a validator.
+
+## Examples
+
+**"Why is this request getting 401s?"** Paste the bearer token from the failing request. If the status line reads `EXPIRED 2 hours ago`, you've found the bug — likely a token cached past its lifetime or a refresh flow that isn't firing.
+
+**Checking what your identity provider actually puts in the token.** Decode a token issued by your auth server and look at the payload: is the `aud` claim what your API expects? Did the custom `roles` claim make it in? Misconfigured claim mappings are visible in seconds.
+
+**Clock-skew hunting.** A token that fails "before" it should may have an `nbf` a few seconds in the future relative to the consuming server. The claims table shows `nbf` against your local clock, which makes skew between issuer and consumer easy to reason about.
+
+## Edge cases & notes
+
+- **Base64url, not Base64**: JWTs use `-` and `_` instead of `+` and `/`, with padding stripped. Feeding a JWT part to a plain Base64 decoder often fails on exactly those characters.
+- **An empty third part** (`header.payload.`) is an *unsecured JWT* (`"alg":"none"`). Some libraries mint these in test mode; production systems should reject them.
+- **`aud` may be a string or an array** per the spec — the claims table renders both.
+- Times are judged against **your machine's clock**. If your clock is wrong, the valid/expired verdict will be too.
+
+<p style="font-size:13px" class="ink-secondary">Looking at the two encoded parts yourself? They're plain base64url — the same encoding the <a href="/tools/base64-encoder-decoder/">Base64 tool</a> handles.</p>
