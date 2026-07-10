@@ -1,0 +1,41 @@
+---
+title: "Diff Checker"
+slug: "diff-checker"
+no: 12
+category: "text"
+description: "Compare two texts with unified or side-by-side views, character-level highlighting, and ignore-case/whitespace options. Free and in-browser."
+keywords: ["diff checker", "text compare", "compare two files online", "diff tool", "text difference", "side by side diff"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["duplicate-line-remover", "regex-tester", "word-character-counter"]
+faq:
+  - q: "Is it safe to compare confidential documents or code here?"
+    a: "Yes. The diff is computed by a JavaScript library running in your browser tab — neither text is uploaded, logged, or stored, and the page works offline."
+  - q: "What algorithm does the comparison use?"
+    a: "The jsdiff library, an implementation of Myers' O(ND) difference algorithm — the same family of algorithm git uses. Lines are compared first; changed line pairs are then re-compared character by character for the inline highlights."
+  - q: "What's the difference between the unified and side-by-side views?"
+    a: "Unified shows one column with removed lines (−) directly above added lines (+), like git diff — best for reviewing changes in context. Side-by-side puts the original on the left and the changed text on the right with matching rows aligned — best for comparing structure."
+  - q: "How large a text can it handle?"
+    a: "Inputs of around 10,000 lines diff comfortably; typing is debounced so the comparison doesn't run on every keystroke. Display is capped at 5,000 diff lines to keep the page responsive — the added/removed counts always cover the entire diff."
+  - q: "Why do two visually identical lines show as different?"
+    a: "Usually invisible characters: trailing spaces, tabs vs. spaces, or Windows (CRLF) vs. Unix (LF) line endings. Enable IGNORE WHITESPACE to compare content only — the character-level highlight will otherwise show you exactly where the invisible difference sits."
+---
+
+## What it does
+
+Paste two versions of a text and see exactly what changed: line-level differences with character-level highlighting inside changed lines, in either a unified (git-style) or side-by-side view. A stats line counts added, removed, and changed lines, and comparisons can ignore case or whitespace.
+
+## Examples
+
+**Two versions of a config file.** The pre-filled sample compares two releases of a service config: the version bump and port change are highlighted character-by-character (only `8080` → `8443` lights up, not the whole line), and the new `timeoutMs` line shows as a clean addition.
+
+**"What did the ORM change in this SQL?"** Paste the query from yesterday's log and today's. Side-by-side view aligns the two statements so a changed `JOIN` condition or an extra predicate stands out immediately.
+
+**Comparing API responses.** Two JSON payloads from staging and production — with IGNORE WHITESPACE enabled, formatting differences disappear and only real value changes remain.
+
+## Edge cases & notes
+
+- **Changed vs. added/removed:** when a block of removed lines is followed by a block of added lines, pairs are counted as *changed* and get inline highlighting; the surplus (if the blocks differ in length) counts as purely added or removed.
+- **Whitespace-only differences** are the most common "why is this line marked?" surprise — trailing spaces and CRLF/LF both count as changes unless IGNORE WHITESPACE is on.
+- **Very long lines** (over ~1,000 characters) skip character-level highlighting — a minified bundle diff at character granularity isn't readable anyway; the line-level diff still works.
+- Order matters: the left/first pane is treated as the original, so swapped inputs invert every + and −.

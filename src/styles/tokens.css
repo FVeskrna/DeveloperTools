@@ -451,6 +451,35 @@ nav[aria-label='Breadcrumb'] a {
   color: var(--ink-secondary);
 }
 
+/* Diff checker */
+.diff-row {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0 12px;
+}
+.diff-gutter {
+  user-select: none;
+  color: var(--ink-secondary);
+  font-size: 11px;
+}
+.diff-del {
+  background: color-mix(in srgb, var(--error) 9%, transparent);
+}
+.diff-add {
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+mark.diff-del-ch {
+  background: color-mix(in srgb, var(--error) 30%, transparent);
+  color: inherit;
+}
+mark.diff-add-ch {
+  background: color-mix(in srgb, var(--ok) 32%, transparent);
+  color: inherit;
+}
+
 /* Match highlighting (regex tester) */
 mark.match {
   background: color-mix(in srgb, var(--accent) 18%, transparent);

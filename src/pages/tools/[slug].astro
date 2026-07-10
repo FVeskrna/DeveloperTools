@@ -14,6 +14,7 @@ import WordCharCounter from '../../components/tools/WordCharCounter';
 import FetchXmlFormatter from '../../components/tools/FetchXmlFormatter';
 import ODataFilterBuilder from '../../components/tools/ODataFilterBuilder';
 import JwtDecoder from '../../components/tools/JwtDecoder';
+import DiffChecker from '../../components/tools/DiffChecker';
 
 const KNOWN_SLUGS = [
   'regex-tester',
@@ -27,6 +28,7 @@ const KNOWN_SLUGS = [
   'fetchxml-formatter',
   'odata-filter-builder',
   'jwt-decoder',
+  'diff-checker',
 ];
 
 export async function getStaticPaths() {
@@ -63,6 +65,7 @@ if (!KNOWN_SLUGS.includes(slug)) {
   {slug === 'fetchxml-formatter' && <FetchXmlFormatter client:load />}
   {slug === 'odata-filter-builder' && <ODataFilterBuilder client:load />}
   {slug === 'jwt-decoder' && <JwtDecoder client:load />}
+  {slug === 'diff-checker' && <DiffChecker client:load />}
   <Fragment slot="article">
     <Content />
   </Fragment>
