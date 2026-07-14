@@ -1,0 +1,46 @@
+---
+title: "CSV to JSON Converter"
+slug: "csv-json-converter"
+no: 17
+category: "data"
+description: "Convert CSV to JSON and back with delimiter auto-detection (comma, semicolon, tab), header and type options, and a preview table. In-browser."
+keywords: ["csv to json", "json to csv", "csv converter", "semicolon csv to json", "convert csv online", "csv json converter"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["yaml-json-converter", "sql-formatter", "xml-formatter"]
+faq:
+  - q: "Why is my European Excel CSV one giant column in other tools?"
+    a: "Excel in most European locales exports with semicolons, because the comma is the decimal separator there. Tools that assume commas read the whole line as one field. This converter auto-detects comma, semicolon, and tab — the stats line tells you which one it found."
+  - q: "Is my data uploaded anywhere?"
+    a: "No. Parsing runs on the PapaParse library inside your browser tab — exports containing customer data never leave the page, and it works offline."
+  - q: "What does type inference do, and when should I turn it off?"
+    a: "With it on, '42' becomes the number 42 and 'true' becomes a boolean. Turn it off when leading zeros matter (zip codes, phone numbers, article numbers like 007) or when ids are too long for JavaScript numbers — everything then stays a string, exactly as written."
+  - q: "How is nested JSON converted to CSV?"
+    a: "One level of nesting is flattened with dot notation: {\"user\": {\"name\": \"Jana\"}} becomes a user.name column. Deeper objects and arrays are embedded as JSON strings, since CSV has no native representation for them."
+  - q: "How are quotes, commas, and line breaks inside values handled?"
+    a: "Per RFC 4180: values containing the delimiter, quotes, or newlines are wrapped in double quotes, and embedded quotes are doubled. Both directions handle this — a description field with a comma or line break round-trips intact."
+---
+
+## What it does
+
+Convert CSV exports into a JSON array of objects, or a JSON array back into CSV — with the delimiter auto-detected (comma, semicolon, or tab), a header-row toggle, and optional type inference. A preview table shows the first rows so you can verify columns landed correctly before copying the full output.
+
+## Examples
+
+**A semicolon-delimited Excel export.** The pre-filled sample uses semicolons, as European Excel does. Auto-detect reports `delimiter: semicolon`, and with type inference on, `revenue` comes out as a number and `active` as a boolean:
+
+```json
+{ "name": "Jana Novak", "city": "Brno", "revenue": 125000, "active": true }
+```
+
+**API response → spreadsheet.** Paste a JSON array of objects in JSON → CSV mode and open the result in Excel. Nested objects like `"address": {"city": "Brno"}` become an `address.city` column automatically.
+
+**Headerless machine output.** Disable FIRST ROW IS HEADER for raw data without column names — rows become arrays in the JSON, or get generated `col1…colN` names in the preview.
+
+## Edge cases & notes
+
+- **Preserve-as-string cases:** zip codes (`01234`), phone numbers, and 18-digit ids all get damaged by type inference — that's what the toggle is for. When off, nothing is reinterpreted.
+- **Ragged rows** (a line with fewer fields than the header) produce `null` values for the missing columns rather than failing the whole parse.
+- **Column union on JSON → CSV:** if later objects have keys the first object lacks, the header is built from the union of all keys and missing cells are left empty — tools that read only the first object would silently drop those columns.
+- **Round-tripping** CSV → JSON → CSV preserves data but normalizes formatting: quoting style and delimiter follow the output settings, not the original file.
+- Very large files (tens of MB) are better handled by streaming tools; this page keeps everything in tab memory.
