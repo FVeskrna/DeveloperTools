@@ -1,0 +1,42 @@
+---
+title: "URL Encoder / Decoder"
+slug: "url-encoder-decoder"
+no: 14
+category: "converters"
+description: "Encode and decode URLs and query strings with encodeURIComponent or encodeURI modes, plus-as-space handling, and paste auto-detection. In-browser."
+keywords: ["url encoder", "url decoder", "percent encoding", "encodeuricomponent", "decode url online", "query string encoder"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["base64-encoder-decoder", "jwt-decoder", "regex-tester"]
+faq:
+  - q: "What's the difference between encodeURIComponent and encodeURI?"
+    a: "encodeURIComponent escapes every reserved character including :/?#&= — use it for a single value going into a query string or path segment. encodeURI leaves those structural characters alone — use it to make a complete URL transport-safe without destroying its structure. Encoding a value with encodeURI is the classic bug: an & inside the value survives and splits your query string."
+  - q: "Why does my decoded string show + instead of spaces?"
+    a: "Because + means space only in application/x-www-form-urlencoded data (HTML form submissions), not in percent-encoding generally. decodeURIComponent leaves + alone by design. Enable the 'treat + as space' option when decoding form data or query strings produced by older frameworks."
+  - q: "Why does decoding fail with 'URI malformed'?"
+    a: "The input contains a % that isn't followed by two hex digits — often a literal percent sign that was never encoded (it should be %25), or a string that was truncated mid-escape. Find the bare % and the rest will decode."
+  - q: "Should I encode the whole URL or each parameter?"
+    a: "Each parameter value, individually, with encodeURIComponent — then assemble the URL from already-safe parts. Encoding an assembled URL afterwards can't fix a value that contains & or =, because by then it's indistinguishable from the URL's own structure."
+  - q: "Is anything I paste sent anywhere?"
+    a: "No. Encoding and decoding use the browser's built-in functions in your tab; URLs (which often contain tokens and ids) never leave the page."
+---
+
+## What it does
+
+Percent-encode text for use in URLs, or decode an encoded URL back to readable text. Two modes match the two real jobs: **component** (escape everything — for individual values) and **whole URL** (preserve `:/?#&=` structure). Pasting auto-detects direction, and a form-encoding option handles the `+`-as-space convention.
+
+## Examples
+
+**A search query with reserved characters.** The pre-filled sample — `order status: paid & shipped (50% off, café pickup)` — encodes in component mode to `order%20status%3A%20paid%20%26%20shipped%20(50%25%20off%2C%20caf%C3%A9%20pickup)`. Note the `&` becoming `%26` (it would split the query string raw) and `é` becoming its two-byte UTF-8 sequence `%C3%A9`.
+
+**Reading a tracking URL from an email.** Paste a monster like `https://example.com/r?u=https%3A%2F%2Fshop.example.com%2Fsale%3Fitem%3D42` — auto-detect flips to decode and reveals the nested destination URL. Decode twice for double-encoded redirects.
+
+**A legacy form submission.** `name=Novak%2C+Jana&city=Brno` decodes with TREAT + AS SPACE enabled to `name=Novak, Jana&city=Brno` — without the option, the `+` correctly stays a plus.
+
+## Edge cases & notes
+
+- **`+` is not universally a space.** It means space only in form-encoded data. In a path segment, `+` is a literal plus — decoding it as space corrupts the value. That's why the option is explicit and off by default.
+- **Spaces become `%20`** with JavaScript's encoders, never `+`. If a receiving system insists on `+`, that system is speaking form encoding.
+- **Unicode is UTF-8:** every non-ASCII character encodes to multiple `%XX` bytes (`€` → `%E2%82%AC`). Decoders that assume Latin-1 will show mojibake for the same bytes.
+- **Double encoding** (`%2520` — an encoded `%20`) usually means two layers encoded the same value; decode repeatedly until stable to see through it, and fix the producer.
+- `encodeURI` never escapes `#`, so a literal `#` in a value still needs component encoding — it would otherwise become a fragment separator.
