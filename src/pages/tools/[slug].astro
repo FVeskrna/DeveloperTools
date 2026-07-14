@@ -20,6 +20,7 @@ import UrlEncoderDecoder from '../../components/tools/UrlEncoderDecoder';
 import Base64EncoderDecoder from '../../components/tools/Base64EncoderDecoder';
 import CronParser from '../../components/tools/CronParser';
 import CsvJsonConverter from '../../components/tools/CsvJsonConverter';
+import PluginTraceLogParser from '../../components/tools/PluginTraceLogParser';
 
 const KNOWN_SLUGS = [
   'regex-tester',
@@ -39,6 +40,7 @@ const KNOWN_SLUGS = [
   'base64-encoder-decoder',
   'cron-expression-parser',
   'csv-json-converter',
+  'plugin-trace-log-parser',
 ];
 
 export async function getStaticPaths() {
@@ -81,6 +83,7 @@ if (!KNOWN_SLUGS.includes(slug)) {
   {slug === 'base64-encoder-decoder' && <Base64EncoderDecoder client:load />}
   {slug === 'cron-expression-parser' && <CronParser client:load />}
   {slug === 'csv-json-converter' && <CsvJsonConverter client:load />}
+  {slug === 'plugin-trace-log-parser' && <PluginTraceLogParser client:load />}
   <Fragment slot="article">
     <Content />
   </Fragment>

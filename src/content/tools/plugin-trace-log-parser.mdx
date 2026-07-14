@@ -1,0 +1,42 @@
+---
+title: "Plugin Trace Log Parser"
+slug: "plugin-trace-log-parser"
+no: 18
+category: "dynamics-365"
+description: "Parse Dataverse plugin trace logs into a timeline with durations, extracted stage/depth/mode fields, and the innermost exception surfaced first."
+keywords: ["plugin trace log parser", "parse plugin trace log", "dataverse plugin trace", "dynamics 365 plugin debugging", "plugin trace log dynamics", "itracingservice"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["fetchxml-formatter", "odata-filter-builder", "dataverse-webapi-url-builder"]
+faq:
+  - q: "Where do I find plugin trace logs in the first place?"
+    a: "Advanced settings → Plug-in Trace Log (or query the plugintracelog table). Each record has a Message Block (what the plugin wrote via ITracingService) and Exception Details. Copy both and paste them here together — the parser separates them."
+  - q: "How do I enable plugin tracing?"
+    a: "Environment settings → Product → Customization → 'Enable logging to plug-in trace log', set to All (everything) or Exception (only failures). It's an org-wide setting; remember to turn it back to Off in production, because All has measurable overhead and the logs count against storage."
+  - q: "What does Depth mean, and why is mine 2?"
+    a: "Depth counts how far down a chain of triggered operations you are: 1 is a direct user/API call; 2 means your plugin ran because another plugin or workflow performed an operation. Depth is the key clue when hunting infinite loops — a plugin that updates its own entity re-triggers itself at increasing depth until the platform kills it at 8."
+  - q: "What are the stage numbers (10, 20, 40)?"
+    a: "The pipeline stage the step ran in: 10 = pre-validation (outside the database transaction), 20 = pre-operation (in transaction, before the save), 40 = post-operation (in transaction, after the save). The parser annotates the number so you don't have to remember."
+  - q: "Is it safe to paste trace logs with customer data here?"
+    a: "The parsing runs entirely in your browser — nothing is uploaded or stored, and the page works offline. Trace logs can still contain sensitive attribute values your plugin traced, so treat the pasted text with the same care as the log itself."
+---
+
+## What it does
+
+Paste the raw text of a Dataverse plugin trace log — the Message Block plus Exception Details — and get a structured view: registration fields (depth, stage, mode, message, entity) extracted and annotated, timestamped trace lines turned into an execution timeline with per-step durations, and the exception chain unwound so the *innermost* message (the one that actually tells you what broke) is at the top instead of buried under three layers of `FaultException`. One click copies the whole summary as Markdown for a ticket or PR comment.
+
+## Examples
+
+**"The plugin failed but the error is useless."** The platform reports `Account credit limit exceeded` wrapped in a `FaultException`. Paste the trace: the parser surfaces the innermost `System.InvalidOperationException: Credit limit 50000 is below requested 125000` — the actual business rule that fired — and shows it was wrapped by the fault you saw in the UI.
+
+**"Why is this update slow?"** A plugin that traces with timestamps gets a timeline. In the pre-filled sample, the step between *Retrieving parent account* and *Parent retrieved* shows `+674 ms` in red — one retrieve is eating most of the execution. Steps over 500 ms are flagged automatically.
+
+**Attaching findings to a ticket.** COPY AS MARKDOWN produces a summary with the innermost exception, a field table, and the timeline — paste it straight into Azure DevOps or GitHub instead of a screenshot of the trace dialog.
+
+## Edge cases & notes
+
+- **Timestamps are whatever your plugin traced.** The parser recognizes `[HH:mm:ss.fff]` and ISO-style stamps at line starts; if your plugin doesn't trace times, you still get fields, steps, and the exception — just no timeline. (Adding `$"[{DateTime.UtcNow:HH:mm:ss.fff}]"` to your trace calls pays for itself the first slow plugin.)
+- **Depth ≥ 2 is annotated** — if you're debugging an unexpected trigger, that's the first thing to check, before reading a single trace line.
+- **Async plugins** (mode 1) log after the fact; their trace timestamps reflect the async service execution, not the user's save.
+- **The 8-depth limit:** a plugin updating its own trigger entity loops until Dataverse aborts at depth 8 — the trace log for the *last* execution shows the depth counter, which is how you recognize the pattern.
+- Exception stack lines (`   at …`) are kept in the full exception block but excluded from the summary — the innermost message plus the wrap chain is what belongs in a ticket title.

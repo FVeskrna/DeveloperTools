@@ -7,7 +7,7 @@ description: "Build Dataverse Web API $filter strings from visual condition rows
 keywords: ["odata filter builder", "dataverse web api filter", "dynamics 365 odata", "$filter dataverse", "odata query dynamics", "web api filter builder"]
 version: "1.0"
 added: 2026-07-06
-relatedTools: ["fetchxml-formatter", "regex-tester", "unix-timestamp-converter"]
+relatedTools: ["dataverse-webapi-url-builder", "fetchxml-formatter", "plugin-trace-log-parser"]
 faq:
   - q: "Why is my GUID filter failing with a 400 error?"
     a: "In the Dataverse Web API, GUIDs are unquoted: statecode eq 0 and _parentcustomerid_value eq a1b2c3d4-… — no quotes, no guid'…' prefix. Set the value type to guid in the builder and it emits the correct form."
