@@ -14,5 +14,6 @@ export const CATEGORIES: Record<string, string> = {
   data: 'Data',
   converters: 'Converters',
   images: 'Images',
+  design: 'Design',
   'dynamics-365': 'Dynamics 365',
 };

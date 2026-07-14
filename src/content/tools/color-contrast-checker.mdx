@@ -1,0 +1,42 @@
+---
+title: "Color Contrast Checker"
+slug: "color-contrast-checker"
+no: 20
+category: "design"
+description: "Check WCAG contrast ratios with AA/AAA pass badges, live text preview, an eyedropper, and a one-click fix to the nearest passing shade."
+keywords: ["color contrast checker", "wcag contrast ratio", "aa contrast checker", "accessibility color checker", "contrast ratio calculator", "wcag aa aaa"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["word-character-counter", "diff-checker", "url-encoder-decoder"]
+faq:
+  - q: "What do AA and AAA actually mean?"
+    a: "They're WCAG conformance levels. AA is the widely required standard (and what most accessibility law references): 4.5:1 for normal text, 3:1 for large text. AAA is the stricter enhanced level: 7:1 and 4.5:1. Aim for AA everywhere; treat AAA as the target for body text people read at length."
+  - q: "What counts as 'large text'?"
+    a: "18.66px bold or 24px regular and up (WCAG defines it as 14pt bold / 18pt). Large text gets the lower thresholds because bigger strokes stay legible at lower contrast — it's why a pale heading can pass while identical-colored body text fails."
+  - q: "How is the contrast ratio calculated?"
+    a: "From the relative luminance of both colors using the WCAG 2.x formula: (L1 + 0.05) / (L2 + 0.05), giving 1:1 for identical colors and 21:1 for black on white. It's computed locally in your browser — the same math axe and Lighthouse use."
+  - q: "What does the suggested shade change about my color?"
+    a: "Only lightness. The tool keeps your hue and saturation and walks lightness in 1% steps toward the smallest change that reaches 4.5:1 — so the fixed color still reads as 'your' color, just darker or lighter."
+  - q: "Does contrast checking cover color-blindness?"
+    a: "Partially. The luminance ratio is color-blind-safe by construction (it ignores hue), but information conveyed only by hue — a red/green status pair with equal lightness — can pass contrast checks and still be indistinguishable. Pair color with icons, labels, or weight."
+---
+
+## What it does
+
+Enter a text color and a background color — by hex/rgb value, with a picker, or by sampling anything on your screen with the eyedropper (Chromium browsers) — and get the WCAG contrast ratio with pass/fail badges for AA and AAA at normal and large text sizes, plus a live preview of real text. If you fail AA, one click applies the nearest shade of your color that passes.
+
+## Examples
+
+**The classic gray-on-white miss.** The pre-filled `#999999` on white measures **2.85:1** — it fails everything, despite being one of the most common body-text grays on the web. The suggested fix, `#767676`, keeps the neutral hue and just clears 4.5:1.
+
+**Checking a brand color for button text.** White text on brand-blue `#2038E6` measures about 8.6:1 — passes AAA. Flip the pair (blue text on white) and the ratio is identical: contrast is symmetric.
+
+**Auditing an existing page.** Use PICK FROM SCREEN on the actual rendered text and background of any window — screenshots, PDFs, competitor sites — and read the verdict without opening devtools.
+
+## Edge cases & notes
+
+- **Large text thresholds only apply to genuinely large type** (24px+, or 18.66px bold). Don't reach for the 3:1 allowance for 16px body copy.
+- **Semi-transparent colors:** ratios are defined for opaque colors. If your text uses alpha, measure the *effective* color it renders to (the eyedropper does exactly this).
+- **UI components and graphics** (icons, input borders, focus rings) need 3:1 against adjacent colors under WCAG 2.1 — the AA LARGE badge doubles as that check.
+- **Both directions fail together:** if a foreground fails on a background, swapping them fails identically — fixing one pair fixes both reading orders.
+- The eyedropper needs the EyeDropper API (Chrome, Edge, Opera); in Firefox and Safari the pickers and text inputs do the same job without screen sampling.

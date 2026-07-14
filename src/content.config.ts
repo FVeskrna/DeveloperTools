@@ -9,7 +9,7 @@ const tools = defineCollection({
     slug: z.string(),
     /** Stable sort order (order of addition). */
     no: z.number().int().positive(),
-    category: z.enum(['text', 'data', 'converters', 'images', 'dynamics-365']),
+    category: z.enum(['text', 'data', 'converters', 'images', 'dynamics-365', 'design']),
     description: z.string().max(155),
     keywords: z.array(z.string()),
     version: z.string(),
