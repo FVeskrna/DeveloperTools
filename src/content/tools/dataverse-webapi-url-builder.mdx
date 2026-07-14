@@ -1,0 +1,51 @@
+---
+title: "Dataverse Web API URL Builder"
+slug: "dataverse-webapi-url-builder"
+no: 19
+category: "dynamics-365"
+description: "Build Dataverse Web API query URLs with $select, $filter, $expand, and $orderby, correct encoding, header presets, and fetch/C# snippets."
+keywords: ["dataverse web api url", "dynamics 365 web api query", "dataverse odata query builder", "web api $expand dataverse", "dataverse api select filter"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["odata-filter-builder", "fetchxml-formatter", "plugin-trace-log-parser"]
+faq:
+  - q: "Why does my query return every column even though I set $select?"
+    a: "Check the URL actually reached the server intact — a $select with spaces after commas, or an & that a shell swallowed, silently degrades to all columns. The builder strips spaces from column lists and produces the exact encoded URL, which removes the usual causes."
+  - q: "What does Prefer: odata.include-annotations do?"
+    a: "It asks Dataverse to include annotations: formatted values (option-set labels, formatted money/dates), lookup display names, and the logical names behind _value fields. Without it you get raw values only — most integrations want it on, which is why it's in the header preset."
+  - q: "How do I get related-record columns in one call?"
+    a: "$expand with a nested $select: $expand=primarycontactid($select=fullname,emailaddress1) returns the contact's columns inside each account row. Expanding collections (one-to-many) works too, but only one level deep — Dataverse does not support nested $expand within $expand for collections."
+  - q: "Why is my lookup filter failing while other filters work?"
+    a: "Lookups filter on the virtual _fieldname_value column: $filter=_primarycontactid_value eq <guid>, with the GUID unquoted. Filtering on primarycontactid directly returns a 400. The linked OData Filter Builder handles those rules."
+  - q: "Is anything sent to my environment from this page?"
+    a: "No. The builder only assembles a string — nothing is executed, no request leaves your browser. The org URL you type is placeholder text in the output; use whatever value you like."
+---
+
+## What it does
+
+Compose a Dataverse Web API `GET` query from form fields — entity set, `$select`, `$filter`, `$expand` with nested `$select`, `$orderby`, `$top`, `$count` — and watch the correctly encoded URL assemble live. Alongside it: the standard OData header preset with one-click copy, and a ready-to-paste `fetch()` or C# `HttpClient` snippet built around your exact query.
+
+## Examples
+
+**Active high-revenue accounts with their primary contact.** The pre-filled form produces:
+
+```text
+GET [org]/api/data/v9.2/accounts?$select=name,revenue,statecode
+    &$filter=statecode eq 0 and revenue gt 100000
+    &$expand=primarycontactid($select=fullname,emailaddress1)
+    &$orderby=revenue desc&$top=10
+```
+
+(one line in reality — spaces inside the filter are `%20`-encoded for you).
+
+**"Just give me a count."** Clear `$top`, enable `$count=true`, and the response's `@odata.count` tells you how many records match the filter without paging through them.
+
+**From experiment to code.** Once the URL returns what you expect (paste it into a browser tab while logged in to your org — it works), flip the snippet toggle to C# and copy an `HttpClient` block with the headers already correct, including the annotation preference.
+
+## Edge cases & notes
+
+- **Entity set names are plural logical names** (`accounts`, `contacts`, `new_projectses` — yes, Dataverse pluralizes custom entities mechanically). A 404 with a valid-looking URL is almost always a singular/plural mistake.
+- **Encoding:** spaces and quotes must be percent-encoded but `$`, `=`, `&`, commas, and parentheses must not be — over-encoding an OData query breaks it as reliably as under-encoding. The builder uses the encoding Dataverse actually accepts.
+- **`$top` vs. paging:** `$top` caps the result set; for full extraction follow `@odata.nextLink` instead and set `Prefer: odata.maxpagesize`. Mixing `$top` with `$count=true` is allowed — the count ignores `$top`.
+- **v9.2** is the stable version segment for current environments; older orgs may use v9.0/v9.1 — the path is the only thing you'd change.
+- Authorization is a bearer token from Microsoft Entra ID; acquiring it (MSAL, connection strings, managed identity) is deliberately out of scope for the snippet's `accessToken` variable.
