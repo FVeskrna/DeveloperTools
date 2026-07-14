@@ -1,0 +1,42 @@
+---
+title: "Cron Expression Parser"
+slug: "cron-expression-parser"
+no: 16
+category: "converters"
+description: "Translate cron expressions into plain English with the next 5 run times in any timezone and a per-field breakdown. Free and in-browser."
+keywords: ["cron expression parser", "cron parser", "crontab explained", "cron next run time", "cron expression to english", "cron schedule checker"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["unix-timestamp-converter", "regex-tester", "uuid-generator"]
+faq:
+  - q: "Which cron flavor does this parse?"
+    a: "Standard 5-field cron (minute, hour, day-of-month, month, day-of-week) as used by crontab, GitHub Actions, Kubernetes CronJobs, and most schedulers. It supports *, ranges, steps, lists, and MON/JAN-style names. Quartz-style 6- and 7-field expressions are detected and flagged rather than misread."
+  - q: "Why does my Quartz expression from a .NET or Java scheduler fail?"
+    a: "Quartz adds a leading seconds field (and optionally a trailing year), plus extra syntax like ? L W and #. Paste one here and the parser tells you it's 6- or 7-field rather than silently shifting every field by one — remove the seconds (and year) fields to preview the rest."
+  - q: "What happens when both day-of-month and day-of-week are set?"
+    a: "Standard cron treats them as OR, which surprises almost everyone: '0 0 1,15 * MON' fires on the 1st, the 15th, AND every Monday — not only on Mondays that fall on those dates. The description spells the OR out whenever both fields are restricted."
+  - q: "Which timezone do the next run times use?"
+    a: "Whatever you pick — it defaults to your local zone, computed with the browser's IANA timezone database, so DST transitions are handled correctly. Remember that the server running your actual cron daemon may be in a different zone (often UTC)."
+  - q: "How do I run something on the last day of the month?"
+    a: "Standard cron has no 'last day' token (Quartz's L is non-standard). The common workaround is scheduling 0 0 28-31 * * and having the script itself check whether tomorrow is the 1st. Scheduling day 31 alone silently skips 30-day months — the run-time preview here makes that visible."
+---
+
+## What it does
+
+Paste a cron expression and get it back in plain English, along with the next five times it will fire in a timezone of your choice and a table showing exactly which values each of the five fields matches. Presets cover the schedules everyone reaches for; 6-field (Quartz/seconds) input is detected and explained rather than misparsed.
+
+## Examples
+
+**`*/15 * * * *`** — the pre-filled sample — reads as *Every 15 minutes*, with the field table showing minutes 0, 15, 30, 45 and every value elsewhere.
+
+**`0 9 * * 1-5`** (the WEEKDAYS 9:00 preset) reads as *At 09:00 on Monday through Friday*. Switch the timezone selector between UTC and your local zone and watch the run times shift — the classic "why did my report arrive at 7 a.m.?" bug, reproduced safely.
+
+**`0 0 1 1 *`** reads as *At 00:00 on day 1 of the month in January* — a yearly job. The next-runs list shows five consecutive New Year midnights, which confirms the intent faster than any manual reading of the fields.
+
+## Edge cases & notes
+
+- **Day fields OR together.** When both day-of-month and day-of-week are restricted, matching either fires the job (see FAQ) — the single most common cron misreading.
+- **`0` and `7` both mean Sunday** in the day-of-week field; the parser normalizes them.
+- **Day 31 in a 30-day month** simply never matches — the preview skips those months, which is how you catch a "monthly" job that silently misses September.
+- **DST:** a job scheduled inside the spring-forward gap (e.g. 02:30 on transition night in Europe) has no real wall-clock moment; real cron daemons differ in what they do, and the preview here resolves it to the nearest valid instant. Avoid scheduling inside 02:00–03:00 local if this matters to you.
+- Steps apply to ranges: `10-30/5` = 10, 15, 20, 25, 30; a bare `5/15` (Vixie extension) means "from 5 to max, step 15".

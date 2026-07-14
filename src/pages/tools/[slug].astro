@@ -18,6 +18,7 @@ import DiffChecker from '../../components/tools/DiffChecker';
 import UuidGenerator from '../../components/tools/UuidGenerator';
 import UrlEncoderDecoder from '../../components/tools/UrlEncoderDecoder';
 import Base64EncoderDecoder from '../../components/tools/Base64EncoderDecoder';
+import CronParser from '../../components/tools/CronParser';
 
 const KNOWN_SLUGS = [
   'regex-tester',
@@ -35,6 +36,7 @@ const KNOWN_SLUGS = [
   'uuid-generator',
   'url-encoder-decoder',
   'base64-encoder-decoder',
+  'cron-expression-parser',
 ];
 
 export async function getStaticPaths() {
@@ -75,6 +77,7 @@ if (!KNOWN_SLUGS.includes(slug)) {
   {slug === 'uuid-generator' && <UuidGenerator client:load />}
   {slug === 'url-encoder-decoder' && <UrlEncoderDecoder client:load />}
   {slug === 'base64-encoder-decoder' && <Base64EncoderDecoder client:load />}
+  {slug === 'cron-expression-parser' && <CronParser client:load />}
   <Fragment slot="article">
     <Content />
   </Fragment>
