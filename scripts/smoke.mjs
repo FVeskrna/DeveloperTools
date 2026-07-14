@@ -220,6 +220,14 @@ check('cron: yearly described', (await page.textContent('main')).includes('At 00
 await page.fill('#cron-expr', '0 */15 * * * *');
 await page.waitForTimeout(200);
 check('cron: 6-field flagged', (await page.locator('[role=alert]').textContent()).includes('6-field'));
+await page.fill('#cron-expr', '0 9 * * 1-5');
+await page.fill('#cron-tz-search', 'prague');
+await page.waitForTimeout(200);
+await page.click('.tz-option:has-text("Europe/Prague")');
+await page.waitForTimeout(400);
+check('cron: tz type-to-filter picks zone', (await page.inputValue('#cron-tz')) === 'Europe/Prague');
+check('cron: runs recompute in picked zone', (await page.locator('.output-pane ol li').count()) === 5);
+check('cron: tz select stays small', (await page.locator('#cron-tz option').count()) < 25);
 
 // ---------- csv/json ----------
 await page.goto(`${BASE}/tools/csv-json-converter/`, { waitUntil: 'networkidle' });

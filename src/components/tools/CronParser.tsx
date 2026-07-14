@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { compressValues, describeCron, nextRuns, parseCron } from '../../lib/cron';
+import TimeZonePicker from './TimeZonePicker';
 import { CopyButton, ErrorLine, FieldLabel, OutputPane, useSweep } from './ui';
 
 const PRESETS: { label: string; expr: string }[] = [
@@ -41,7 +42,6 @@ function relative(ms: number, nowMs: number): string {
 export default function CronParser() {
   const [expr, setExpr] = useState('*/15 * * * *');
   const [timeZone, setTimeZone] = useState('UTC');
-  const [zones, setZones] = useState<string[]>(['UTC']);
   const [nowMs, setNowMs] = useState<number | null>(null);
   const [sweep, triggerSweep] = useSweep();
   const lastGood = useRef('');
@@ -50,13 +50,9 @@ export default function CronParser() {
     setNowMs(Date.now());
     try {
       const local = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const all: string[] =
-        'supportedValuesOf' in Intl ? (Intl as { supportedValuesOf(k: string): string[] }).supportedValuesOf('timeZone') : [];
-      const head = ['UTC', ...(local && local !== 'UTC' ? [local] : [])];
-      setZones([...head, ...all.filter((z) => !head.includes(z))]);
       if (local) setTimeZone(local);
     } catch {
-      /* UTC-only fallback */
+      /* UTC fallback */
     }
   }, []);
 
@@ -93,16 +89,7 @@ export default function CronParser() {
             autoComplete="off"
           />
         </div>
-        <div>
-          <FieldLabel htmlFor="cron-tz">TIME ZONE</FieldLabel>
-          <select id="cron-tz" className="field" value={timeZone} onChange={(e) => setTimeZone(e.target.value)}>
-            {zones.map((z) => (
-              <option key={z} value={z}>
-                {z}
-              </option>
-            ))}
-          </select>
-        </div>
+        <TimeZonePicker id="cron-tz" value={timeZone} onChange={setTimeZone} />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">

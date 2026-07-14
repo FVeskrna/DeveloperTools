@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import TimeZonePicker from './TimeZonePicker';
 import { CopyButton, ErrorLine, FieldLabel, OutputPane, useSweep } from './ui';
 
 type Unit = 'auto' | 's' | 'ms';
@@ -50,7 +51,6 @@ export default function TimestampConverter() {
   const [epochInput, setEpochInput] = useState('1735689600');
   const [unit, setUnit] = useState<Unit>('auto');
   const [timeZone, setTimeZone] = useState('UTC');
-  const [zones, setZones] = useState<string[]>(['UTC']);
   const [humanInput, setHumanInput] = useState('2026-07-06T12:00:00Z');
   const [sweep, triggerSweep] = useSweep();
   const lastResult = useRef('');
@@ -60,13 +60,9 @@ export default function TimestampConverter() {
     const id = setInterval(() => setNowMs(Date.now()), 1000);
     try {
       const local = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const all: string[] =
-        'supportedValuesOf' in Intl ? (Intl as { supportedValuesOf(k: string): string[] }).supportedValuesOf('timeZone') : [];
-      const head = ['UTC', ...(local && local !== 'UTC' ? [local] : [])];
-      setZones([...head, ...all.filter((z) => !head.includes(z))]);
       if (local) setTimeZone(local);
     } catch {
-      /* keep UTC-only fallback */
+      /* keep UTC fallback */
     }
     return () => clearInterval(id);
   }, []);
@@ -144,16 +140,7 @@ export default function TimestampConverter() {
             <option value="ms">milliseconds</option>
           </select>
         </div>
-        <div>
-          <FieldLabel htmlFor="ts-zone">TIME ZONE</FieldLabel>
-          <select id="ts-zone" className="field" value={timeZone} onChange={(e) => setTimeZone(e.target.value)}>
-            {zones.map((z) => (
-              <option key={z} value={z}>
-                {z}
-              </option>
-            ))}
-          </select>
-        </div>
+        <TimeZonePicker id="ts-zone" value={timeZone} onChange={setTimeZone} />
       </div>
 
       {!epoch.ok && <ErrorLine>{epoch.error}</ErrorLine>}

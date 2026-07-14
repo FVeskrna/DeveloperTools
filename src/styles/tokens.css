@@ -451,6 +451,39 @@ nav[aria-label='Breadcrumb'] a {
   color: var(--ink-secondary);
 }
 
+/* Timezone type-to-filter menu */
+.tz-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 100%;
+  z-index: 40;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  max-height: 240px;
+  overflow: auto;
+  white-space: nowrap;
+}
+.tz-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: none;
+  border: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.tz-option:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+
 /* Diff checker */
 .diff-row {
   font-family: var(--font-mono);
