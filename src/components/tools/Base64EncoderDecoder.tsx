@@ -129,7 +129,7 @@ export default function Base64EncoderDecoder() {
         />
       </div>
 
-      {!result.ok && <ErrorLine>{result.error}</ErrorLine>}
+      {!result.ok && !imagePreview && <ErrorLine>{result.error}</ErrorLine>}
 
       <OutputPane
         sweep={sweep}

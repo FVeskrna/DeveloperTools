@@ -1,4 +1,7 @@
 // End-to-end smoke test against the astro preview server using system Edge.
+import { writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { chromium } from 'playwright';
 
 const BASE = process.env.SMOKE_BASE ?? 'http://localhost:4321';
@@ -31,7 +34,7 @@ page.on('response', (r) => {
 // ---------- homepage ----------
 await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 check('home: title', (await page.title()).includes('exacttools'));
-check('home: catalog cards', (await page.locator('a.tool-card').count()) === 10);
+check('home: catalog cards', (await page.locator('a.tool-card').count()) === 20);
 check('home: no dark class by default (light OS)', true);
 
 // console greeting easter egg — reload with a listener capturing all log levels
@@ -138,6 +141,126 @@ await page.goto(`${BASE}/tools/odata-filter-builder/`, { waitUntil: 'networkidle
 await page.waitForTimeout(300);
 const odOut = await page.locator('.output-pane pre').textContent();
 check('odata: prefilled filter', odOut.includes("$filter=statecode eq 0 and contains(name,'contoso')"));
+
+// ---------- jwt decoder ----------
+await page.goto(`${BASE}/tools/jwt-decoder/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(300);
+const jwtMain = await page.textContent('main');
+check('jwt: not-verified notice', jwtMain.includes('not verified'));
+check('jwt: payload decoded', jwtMain.includes('"iss": "https://auth.example.com"'));
+check('jwt: validity indicator', /IN ITS VALID WINDOW|EXPIRED/.test(jwtMain));
+await page.fill('#jwt-input', 'abc.def');
+await page.waitForTimeout(200);
+check('jwt: malformed error', (await page.locator('[role=alert]').textContent()).includes('found 2'));
+
+// ---------- diff checker ----------
+await page.goto(`${BASE}/tools/diff-checker/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(500);
+const diffLabel = await page.locator('.output-pane .ui-label').first().textContent();
+check('diff: stats line', /\+1 ADDED/.test(diffLabel) && /CHANGED/.test(diffLabel));
+check('diff: intra-line highlight', (await page.locator('mark.diff-add-ch').count()) >= 1);
+await page.click('button:has-text("SIDE BY SIDE")');
+await page.waitForTimeout(200);
+check('diff: side-by-side renders', (await page.locator('.diff-row.grid').count()) > 0);
+
+// ---------- uuid generator ----------
+await page.goto(`${BASE}/tools/uuid-generator/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(400);
+const uuidOut = await page.locator('.output-pane pre').first().textContent();
+check('uuid: 5 v4 uuids on load', uuidOut.trim().split('\n').length === 5 && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-/.test(uuidOut));
+check('uuid: inspector identifies v4', (await page.textContent('main')).includes('v4 — random'));
+await page.selectOption('#uuid-version', 'v7');
+await page.waitForTimeout(200);
+const v7Out = await page.locator('.output-pane pre').first().textContent();
+check('uuid: v7 generated', /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-/.test(v7Out));
+
+// ---------- url encoder ----------
+await page.goto(`${BASE}/tools/url-encoder-decoder/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(300);
+check('url: sample encoded', (await page.locator('.output-pane pre').textContent()).includes('order%20status%3A'));
+await page.click('button:has-text("DECODE")');
+await page.fill('#url-input', 'caf%C3%A9%20pickup');
+await page.waitForTimeout(200);
+check('url: decodes utf-8', (await page.locator('.output-pane pre').textContent()).includes('café pickup'));
+
+// ---------- base64 ----------
+await page.goto(`${BASE}/tools/base64-encoder-decoder/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(300);
+const b64Out = await page.locator('.output-pane pre').first().textContent();
+check('base64: sample encodes', b64Out.trim().length > 20 && /^[A-Za-z0-9+/=]+$/.test(b64Out.trim()));
+await page.click('button:has-text("BASE64 → TEXT")');
+await page.fill(
+  '#b64-input',
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+);
+await page.waitForTimeout(200);
+check('base64: image data uri preview', (await page.locator('.output-pane img').count()) === 1);
+const bigFile = join(tmpdir(), 'smoke-big.bin');
+writeFileSync(bigFile, Buffer.alloc(6 * 1024 * 1024));
+await page.setInputFiles('input[type=file]', bigFile);
+await page.waitForTimeout(300);
+check('base64: 5 MB cap enforced', (await page.locator('[role=alert]').last().textContent()).includes('over the 5.00 MB limit'));
+const smallFile = join(tmpdir(), 'smoke-small.txt');
+writeFileSync(smallFile, 'hello base64 file');
+await page.setInputFiles('input[type=file]', smallFile);
+await page.waitForTimeout(300);
+check('base64: file converts', (await page.textContent('main')).includes('COPY DATA: URI'));
+
+// ---------- cron parser ----------
+await page.goto(`${BASE}/tools/cron-expression-parser/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(500);
+check('cron: */15 described', (await page.textContent('main')).includes('Every 15 minutes'));
+check('cron: next 5 runs listed', (await page.locator('.output-pane ol li').count()) === 5);
+await page.fill('#cron-expr', '0 9 * * 1-5');
+await page.waitForTimeout(300);
+check('cron: weekdays described', (await page.textContent('main')).includes('At 09:00 on Monday through Friday'));
+await page.fill('#cron-expr', '0 0 1 1 *');
+await page.waitForTimeout(300);
+check('cron: yearly described', (await page.textContent('main')).includes('At 00:00 on day 1 of the month in January'));
+await page.fill('#cron-expr', '0 */15 * * * *');
+await page.waitForTimeout(200);
+check('cron: 6-field flagged', (await page.locator('[role=alert]').textContent()).includes('6-field'));
+
+// ---------- csv/json ----------
+await page.goto(`${BASE}/tools/csv-json-converter/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(300);
+const csvMain = await page.textContent('main');
+check('csv: semicolon auto-detected', csvMain.includes('DELIMITER: SEMICOLON'));
+check('csv: typed json out', (await page.locator('.output-pane pre').textContent()).includes('"revenue": 125000'));
+await page.click('button:has-text("USE OUTPUT AS INPUT")');
+await page.selectOption('select.field', { label: 'semicolon' });
+await page.waitForTimeout(300);
+const roundTrip = await page.locator('.output-pane pre').textContent();
+check('csv: semicolon round-trip', roundTrip.includes('name;city;revenue;active') && roundTrip.includes('Jana Novak;Brno;125000;true'));
+
+// ---------- plugin trace log ----------
+await page.goto(`${BASE}/tools/plugin-trace-log-parser/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(300);
+const traceMain = await page.textContent('main');
+check('trace: innermost exception surfaced', (await page.locator('[role=alert]').textContent()).includes('System.InvalidOperationException'));
+check('trace: stage annotated', traceMain.includes('Pre-operation'));
+check('trace: timeline delta', traceMain.includes('+674'));
+
+// ---------- dataverse url builder ----------
+await page.goto(`${BASE}/tools/dataverse-webapi-url-builder/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(300);
+const dvUrl = await page.locator('.output-pane pre').first().textContent();
+check('webapi: select assembled', dvUrl.includes('$select=name,revenue,statecode'));
+check('webapi: expand nested select', dvUrl.includes('$expand=primarycontactid($select=fullname,emailaddress1)'));
+check('webapi: filter encoded', dvUrl.includes('statecode%20eq%200'));
+await page.click('button:has-text("C# HTTPCLIENT")');
+await page.waitForTimeout(200);
+check('webapi: c# snippet', (await page.textContent('main')).includes('HttpClient'));
+
+// ---------- color contrast ----------
+await page.goto(`${BASE}/tools/color-contrast-checker/`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(300);
+const ccMain = await page.textContent('main');
+check('contrast: ratio computed', ccMain.includes('CONTRAST RATIO: 2.85 : 1'));
+check('contrast: AA fail badge', ccMain.includes('✕ AA NORMAL'));
+await page.click('button:has-text("APPLY")');
+await page.waitForTimeout(200);
+check('contrast: suggested shade passes', (await page.textContent('main')).includes('✓ AA NORMAL'));
 
 // ---------- 404 ----------
 const resp = await page.goto(`${BASE}/tools/nonexistent/`, { waitUntil: 'domcontentloaded' });

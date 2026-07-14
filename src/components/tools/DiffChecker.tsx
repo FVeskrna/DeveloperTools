@@ -44,18 +44,34 @@ type Hunk =
   | { kind: 'ctx'; lines: string[] }
   | { kind: 'change'; del: string[]; add: string[] };
 
-function toLines(value: string): string[] {
-  const lines = value.split('\n');
-  if (lines[lines.length - 1] === '') lines.pop();
-  return lines;
-}
-
 function buildHunks(a: string, b: string, ignoreCase: boolean, ignoreWhitespace: boolean): Hunk[] {
-  const parts = diffLines(a, b, { ignoreCase, ignoreWhitespace });
+  const aLines = a.split('\n');
+  const bLines = b.split('\n');
+  // jsdiff's diffLines has no ignoreCase option: diff folded copies for the
+  // structure, then map back to the original lines via each part's line count.
+  const parts = diffLines(
+    ignoreCase ? a.toLowerCase() : a,
+    ignoreCase ? b.toLowerCase() : b,
+    { ignoreWhitespace },
+  );
   const hunks: Hunk[] = [];
   let pendingDel: string[] | null = null;
+  let ai = 0;
+  let bi = 0;
   for (const part of parts) {
-    const lines = toLines(part.value);
+    const count = part.count ?? part.value.split('\n').length - (part.value.endsWith('\n') ? 1 : 0);
+    let lines: string[];
+    if (part.removed) {
+      lines = aLines.slice(ai, ai + count);
+      ai += count;
+    } else if (part.added) {
+      lines = bLines.slice(bi, bi + count);
+      bi += count;
+    } else {
+      lines = bLines.slice(bi, bi + count);
+      ai += count;
+      bi += count;
+    }
     if (part.removed) {
       if (pendingDel) pendingDel.push(...lines);
       else pendingDel = [...lines];
@@ -71,6 +87,12 @@ function buildHunks(a: string, b: string, ignoreCase: boolean, ignoreWhitespace:
     }
   }
   if (pendingDel) hunks.push({ kind: 'change', del: pendingDel, add: [] });
+  // A trailing newline produces a final empty context line — drop it.
+  const last = hunks[hunks.length - 1];
+  if (last && last.kind === 'ctx' && last.lines[last.lines.length - 1] === '') {
+    last.lines.pop();
+    if (last.lines.length === 0) hunks.pop();
+  }
   return hunks;
 }
 
