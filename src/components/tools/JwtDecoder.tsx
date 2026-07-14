@@ -1,40 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { base64ToBytes, textToBase64 } from '../../lib/base64';
 import { CopyButton, ErrorLine, FieldLabel, OutputPane, useSweep } from './ui';
 
-/* Base64url without atob/btoa so the pre-filled sample decodes during SSR too. */
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-function b64urlEncode(text: string): string {
-  const bytes = new TextEncoder().encode(text);
-  let out = '';
-  for (let i = 0; i < bytes.length; i += 3) {
-    const b0 = bytes[i]!;
-    const b1 = i + 1 < bytes.length ? bytes[i + 1]! : undefined;
-    const b2 = i + 2 < bytes.length ? bytes[i + 2]! : undefined;
-    out += ALPHABET[b0 >> 2];
-    out += ALPHABET[((b0 & 3) << 4) | ((b1 ?? 0) >> 4)];
-    if (b1 !== undefined) out += ALPHABET[((b1 & 15) << 2) | ((b2 ?? 0) >> 6)];
-    if (b2 !== undefined) out += ALPHABET[b2 & 63];
-  }
-  return out.replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-function b64urlDecodeText(part: string): string {
-  const s = part.replace(/-/g, '+').replace(/_/g, '/').replace(/=+$/, '');
-  if (!/^[A-Za-z0-9+/]*$/.test(s)) throw new Error('contains characters that are not base64url');
-  const bytes: number[] = [];
-  let buffer = 0;
-  let bits = 0;
-  for (const ch of s) {
-    buffer = (buffer << 6) | ALPHABET.indexOf(ch);
-    bits += 6;
-    if (bits >= 8) {
-      bits -= 8;
-      bytes.push((buffer >> bits) & 0xff);
-    }
-  }
-  return new TextDecoder().decode(new Uint8Array(bytes));
-}
+const b64urlEncode = (text: string) => textToBase64(text, true);
+const b64urlDecodeText = (part: string) => new TextDecoder().decode(base64ToBytes(part));
 
 const SAMPLE_TOKEN = [
   b64urlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' })),

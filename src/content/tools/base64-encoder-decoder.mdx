@@ -1,0 +1,41 @@
+---
+title: "Base64 Encoder / Decoder"
+slug: "base64-encoder-decoder"
+no: 15
+category: "converters"
+description: "Encode and decode Base64 with correct UTF-8 handling, a URL-safe variant, and file-to-Base64 with ready data: URIs. Free and in-browser."
+keywords: ["base64 encoder", "base64 decoder", "base64 converter", "file to base64", "data uri generator", "base64 url safe"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["jwt-decoder", "url-encoder-decoder", "number-base-converter"]
+faq:
+  - q: "Is Base64 encryption?"
+    a: "No — it's an encoding, trivially reversible by anyone. It exists to move binary data through text-only channels (JSON, XML, email, URLs), not to hide anything. If you need confidentiality, you need actual encryption."
+  - q: "Why do accented characters and emoji break in other Base64 tools?"
+    a: "Tools built on the browser's bare btoa() fail or corrupt anything outside Latin-1, because btoa predates proper Unicode handling. This tool encodes text to UTF-8 bytes first (TextEncoder), so č, é, and 🚀 round-trip correctly."
+  - q: "What is URL-safe Base64?"
+    a: "The same encoding with + replaced by -, / replaced by _, and padding (=) dropped — because +, /, and = all have meanings inside URLs. It's the variant JWTs and many API tokens use. The toggle switches the output alphabet; the decoder accepts both automatically."
+  - q: "Is my file uploaded when I convert it?"
+    a: "No. The file is read with the browser's FileReader API into this tab's memory, converted there, and never transmitted. The 5 MB cap exists because Base64 output is ~33% larger than the input and very large strings make the tab sluggish."
+  - q: "Why is my decoded output garbage symbols?"
+    a: "The Base64 decoded fine, but the bytes aren't text — you've decoded a file (image, zip, protobuf). The tool detects invalid UTF-8 and says so rather than printing mojibake; if the input is an image data: URI it shows the actual image instead."
+---
+
+## What it does
+
+Convert text to Base64 and back with UTF-8 handled correctly, switch to the URL-safe alphabet used by JWTs and web tokens, or drop in a file (up to 5 MB) to get its Base64 string and a ready-to-paste `data:` URI. Decoding an image data URI shows the image itself.
+
+## Examples
+
+**Unicode round-trip.** The pre-filled sample — Czech diacritics plus an emoji — encodes to `QWhvaiEgRMOpasOgIHZ1IOKAlCDEjWXFoXRpbmEgaSBlbW9qaSDwn5qAIGZ1bmd1asOtLg` (URL-safe mode). Decode it back and every character survives, which is exactly what naive `btoa`-based tools get wrong.
+
+**A small logo as a data URI.** Drop a 12 KB PNG on the file zone: you get the Base64, a `data:image/png;base64,…` URI ready for a CSS `url()` or an `<img src>`, and a preview confirming it's the right file.
+
+**Reading a Basic auth header.** `Authorization: Basic dXNlcjpodW50ZXIy` — paste the token part in decode mode to see `user:hunter2`. (And that's why Basic auth without TLS is plaintext.)
+
+## Edge cases & notes
+
+- **Padding:** standard Base64 pads with `=` to a multiple of 4; the URL-safe variant conventionally drops it. The decoder accepts input with or without padding, and with whitespace/line breaks (common in email-wrapped content).
+- **A length of 4n+1** can never be valid Base64 — the tool flags it as truncation instead of guessing.
+- **Data URIs pasted whole** (`data:text/plain;base64,SGVsbG8`) are recognized in decode mode; only the payload after the comma is decoded.
+- **The ~33% size rule:** every 3 bytes become 4 characters. A 5 MB file produces a ~6.7 MB string — fine for a clipboard, unpleasant inside a source file; prefer real assets over data URIs beyond a few KB.

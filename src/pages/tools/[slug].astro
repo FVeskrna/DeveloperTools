@@ -17,6 +17,7 @@ import JwtDecoder from '../../components/tools/JwtDecoder';
 import DiffChecker from '../../components/tools/DiffChecker';
 import UuidGenerator from '../../components/tools/UuidGenerator';
 import UrlEncoderDecoder from '../../components/tools/UrlEncoderDecoder';
+import Base64EncoderDecoder from '../../components/tools/Base64EncoderDecoder';
 
 const KNOWN_SLUGS = [
   'regex-tester',
@@ -33,6 +34,7 @@ const KNOWN_SLUGS = [
   'diff-checker',
   'uuid-generator',
   'url-encoder-decoder',
+  'base64-encoder-decoder',
 ];
 
 export async function getStaticPaths() {
@@ -72,6 +74,7 @@ if (!KNOWN_SLUGS.includes(slug)) {
   {slug === 'diff-checker' && <DiffChecker client:load />}
   {slug === 'uuid-generator' && <UuidGenerator client:load />}
   {slug === 'url-encoder-decoder' && <UrlEncoderDecoder client:load />}
+  {slug === 'base64-encoder-decoder' && <Base64EncoderDecoder client:load />}
   <Fragment slot="article">
     <Content />
   </Fragment>
