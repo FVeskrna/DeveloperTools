@@ -1,0 +1,41 @@
+---
+title: "UUID / GUID Generator"
+slug: "uuid-generator"
+no: 13
+category: "converters"
+description: "Generate v4 and time-ordered v7 UUIDs in bulk with uppercase, braces, and hyphen options, plus a validator that identifies any UUID. Free, in-browser."
+keywords: ["uuid generator", "guid generator", "generate uuid online", "uuid v4", "uuid v7", "validate uuid", "bulk uuid generator"]
+version: "1.0"
+added: 2026-07-11
+relatedTools: ["jwt-decoder", "number-base-converter", "unix-timestamp-converter"]
+faq:
+  - q: "Are the generated UUIDs cryptographically random?"
+    a: "Yes. v4 UUIDs come from crypto.randomUUID() and v7's random bits from crypto.getRandomValues() — both use your browser's CSPRNG. Nothing is derived from your machine's identity, and no UUID ever leaves the page."
+  - q: "Should I use v4 or v7?"
+    a: "v4 is the safe default: fully random, no information leaked. Choose v7 when the UUID becomes a database primary key — its leading 48 bits are a millisecond timestamp, so ids sort by creation time and index locality improves dramatically over random v4 keys. The trade-off: a v7 id reveals when it was created."
+  - q: "What's the difference between a UUID and a GUID?"
+    a: "Nothing structural — GUID is Microsoft's name for the same 128-bit value. The only practical differences are conventions: Microsoft tooling often displays GUIDs uppercase and wrapped in braces, which the formatting options here reproduce."
+  - q: "Can generated UUIDs collide?"
+    a: "In theory; in practice, no. A v4 UUID has 122 random bits — you'd need to generate about 2.7 quintillion of them for a 50% chance of a single collision. Duplicate UUIDs in real systems almost always come from copy-paste or object-cloning bugs, not the generator."
+  - q: "What does the inspector tell me about an existing UUID?"
+    a: "It validates the format (hyphens, braces, and urn:uuid: prefixes are accepted), then reads the version digit (random, name-based, time-based…) and variant bits. For v7 it also extracts the embedded timestamp — often useful forensically, since it tells you when a record was created."
+---
+
+## What it does
+
+Generate 1–1,000 UUIDs at once — random v4 or time-ordered v7 — formatted the way your target system wants them: uppercase, braced, or hyphen-less. A separate inspector validates any UUID you paste and identifies its version, variant, and (for v7) the creation timestamp embedded in it.
+
+## Examples
+
+**Seeding test data.** Set count to 100, COPY ALL, and paste into your fixture file. Every id comes from the browser's cryptographic RNG, so there are no accidental duplicates from a weak seed.
+
+**A GUID for a C# or SQL Server context.** Enable UPPERCASE and BRACES to get `{9B2F5C1E-8D3A-4C7B-A1E0-5F4B3C2D1E0F}` — the registry/COM-style format Microsoft tooling expects, without hand-editing.
+
+**"What is this id in our database?"** Paste an unknown UUID into the inspector. If it reports `v7 — unix-time + random` with a timestamp of last Tuesday 03:14 UTC, you now know both that it was machine-generated recently and roughly which deploy created it.
+
+## Edge cases & notes
+
+- **v7 support is native here** — the timestamp is placed in the first 48 bits per RFC 9562, so ids generated in the same batch sort lexicographically by creation moment (ties broken by random bits).
+- **Hyphen-less output** is 32 hex characters; the inspector accepts that form back, so round-tripping works.
+- **The version digit is position 13** (first digit of the third group) and the variant is the first digit of the fourth group (8, 9, a, or b for standard UUIDs) — that's all the inspector needs, no server lookup involved.
+- `crypto.randomUUID()` requires a secure context (HTTPS or localhost); on plain HTTP the generator can't run — this site is HTTPS, so it only matters if you self-host the page.
