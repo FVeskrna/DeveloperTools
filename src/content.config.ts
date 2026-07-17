@@ -14,6 +14,8 @@ const tools = defineCollection({
     keywords: z.array(z.string()),
     version: z.string(),
     added: z.coerce.date(),
+    /** Route override for tools that live outside /tools/ (e.g. /dynamics-365/error-codes/). */
+    path: z.string().optional(),
     relatedTools: z.array(z.string()),
     faq: z.array(
       z.object({

@@ -49,10 +49,13 @@ const KNOWN_SLUGS = [
 
 export async function getStaticPaths() {
   const tools = await getCollection('tools');
-  return tools.map((entry) => ({
-    params: { slug: entry.data.slug },
-    props: { entry, all: tools },
-  }));
+  // Tools with a custom path (e.g. the error-code lookup) render elsewhere.
+  return tools
+    .filter((entry) => !entry.data.path)
+    .map((entry) => ({
+      params: { slug: entry.data.slug },
+      props: { entry, all: tools },
+    }));
 }
 
 const { entry, all } = Astro.props;

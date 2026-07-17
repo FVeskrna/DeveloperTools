@@ -13,8 +13,9 @@ interface Props {
 
 const { tool, related } = Astro.props;
 const categoryLabel = CATEGORIES[tool.category] ?? tool.category;
-const path = `/tools/${tool.slug}/`;
+const path = tool.path ?? `/tools/${tool.slug}/`;
 const url = new URL(path, SITE_URL).href;
+const categoryHref = tool.category === 'dynamics-365' ? '/dynamics-365/' : `/#cat-${tool.category}`;
 
 const softwareLd = {
   '@context': 'https://schema.org',
@@ -47,7 +48,7 @@ const pageTitle = `${tool.title} — free, instant, private`;
     <nav class="ui-label py-3" aria-label="Breadcrumb">
       <a href="/">Home</a>
       <span class="ink-secondary">/</span>
-      <a href={`/#cat-${tool.category}`}>{categoryLabel}</a>
+      <a href={categoryHref}>{categoryLabel}</a>
       <span class="ink-secondary">/</span>
       <span aria-current="page">{tool.title}</span>
     </nav>
@@ -91,7 +92,7 @@ const pageTitle = `${tool.title} — free, instant, private`;
           {related.map((r, i) => (
             <>
               {i > 0 && <span class="ink-secondary">&ensp;·&ensp;</span>}
-              <a href={`/tools/${r.slug}/`}>{r.title}</a>
+              <a href={r.path ?? `/tools/${r.slug}/`}>{r.title}</a>
             </>
           ))}
         </p>

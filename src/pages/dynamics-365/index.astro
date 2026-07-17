@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { SITE_NAME, SITE_URL } from '../../config';
+
+const tools = (await getCollection('tools'))
+  .filter((t) => t.data.category === 'dynamics-365')
+  .sort((a, b) => a.data.no - b.data.no);
+
+const title = `Dynamics 365 & Power Platform developer tools — ${SITE_NAME}`;
+const description =
+  'Free browser-based Dataverse tools for Dynamics 365 and Power Platform developers: FetchXML, Web API queries, plugin debugging, Power Fx, and more.';
+
+const collectionLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Dynamics 365 & Power Platform developer tools',
+  url: new URL('/dynamics-365/', SITE_URL).href,
+  description,
+  hasPart: tools.map((t) => ({
+    '@type': 'SoftwareApplication',
+    name: t.data.title,
+    url: new URL(t.data.path ?? `/tools/${t.data.slug}/`, SITE_URL).href,
+    applicationCategory: 'DeveloperApplication',
+  })),
+};
+---
+
+<Base title={title} description={description} path="/dynamics-365/" jsonLd={[collectionLd]}>
+  <div class="container-880">
+    <nav class="ui-label py-3" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="ink-secondary">/</span>
+      <span aria-current="page">Dynamics 365</span>
+    </nav>
+
+    <header class="hairline-b mt-4 pb-5">
+      <h1>Dynamics 365 &amp; Power Platform developer tools</h1>
+      <p class="ink-secondary mt-2" style="max-width: 640px;">
+        Free tools for the work around Dataverse: querying, plugin debugging, naming, registration,
+        and formula formatting. Everything runs client-side in your browser — nothing you paste
+        touches a server.
+      </p>
+    </header>
+
+    <div class="mt-6 grid gap-3 sm:grid-cols-2">
+      {
+        tools.map((t) => (
+          <a class="tool-card" href={t.data.path ?? `/tools/${t.data.slug}/`}>
+            <span class="tool-card-title">{t.data.title}</span>
+            <p>{t.data.description}</p>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</Base>
