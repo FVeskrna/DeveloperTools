@@ -1,0 +1,42 @@
+---
+title: "Power Automate Expression Tester"
+slug: "power-automate-expression-tester"
+no: 21
+category: "dynamics-365"
+description: "Evaluate Power Automate expressions instantly with sample data for triggerBody() and variables(), typed results, and a click-to-insert function reference."
+keywords: ["power automate expression tester", "power automate formatdatetime", "workflow definition language", "power automate expressions", "test flow expression", "logic apps expression tester"]
+version: "1.0"
+added: 2026-07-17
+relatedTools: ["power-fx-formatter", "odata-filter-builder", "dataverse-webapi-url-builder"]
+faq:
+  - q: "How close is this to the real Flow runtime?"
+    a: "It implements the documented Workflow Definition Language semantics for ~70 common functions with a purpose-built parser — including the sharp edges like integer division (div(10,4) is 2) and case-insensitive string comparisons. It is not the Azure runtime: functions tied to a live run (workflow(), actions(), body() of arbitrary steps) and literal float tracking (10.0 vs 10) aren't reproduced. Anything unsupported says so explicitly instead of guessing."
+  - q: "Why does triggerBody() need sample data here?"
+    a: "In a running flow, triggerBody() returns the actual trigger payload. There's no flow here, so you provide a stand-in: paste a representative JSON payload under \"triggerBody\" in the sample data panel (copy one from a real run's trigger outputs). The same applies to variables(), items('loop_name'), and outputs('step_name')."
+  - q: "What are the most useful formatDateTime format strings?"
+    a: "yyyy-MM-dd (date only), yyyy-MM-ddTHH:mm:ssZ (sortable), dd/MM/yyyy (regional), HH:mm (24-hour time), hh:mm tt (12-hour), ddd d MMMM (Mon 6 July). Case matters: MM is month, mm is minutes, HH is 24-hour, hh is 12-hour — the single most common expression bug in flows."
+  - q: "Why does my expression work here but fail in the designer?"
+    a: "The designer wraps expressions in @{...} inside dynamic content and rejects some things silently pasted from elsewhere: smart quotes from Word/Teams instead of straight quotes, or a function name typo the designer reports as 'invalid expression' with no detail. This page's parser gives a position-specific error, which usually identifies exactly the character the designer objected to."
+  - q: "Is my sample data uploaded anywhere?"
+    a: "No. The parser and evaluator are JavaScript running in your tab — expressions and sample payloads never leave the browser, and the page works offline."
+---
+
+## What it does
+
+Type a Workflow Definition Language expression — the language behind Power Automate's expression editor — and see the evaluated result and its type immediately, without saving a flow and running it. A sample-data panel stands in for `triggerBody()`, `variables()`, `items()`, and `outputs()`, and a grouped function reference inserts any of the ~70 supported functions at your cursor.
+
+## Examples
+
+**Format today's date.** The pre-filled `formatDateTime(utcNow(), 'yyyy-MM-dd')` returns today as `2026-07-17` — and switching the format string to `dd/MM/yyyy` or `ddd d MMMM` shows the result instantly, which beats the save-run-check loop for finding the right format string.
+
+**Null-safe field access.** `coalesce(triggerBody()?['account']?['fax'], 'not provided')` against the sample payload returns `not provided` — the `?[]` operator and `coalesce` pattern that prevents the classic "InvalidTemplate: cannot be evaluated because property doesn't exist" failure. Delete the `?` and the tester shows you exactly the error a real run would produce.
+
+**Date arithmetic for an SLA.** `dateDifference(triggerBody()?['createdon'], utcNow())` (add a `createdon` timestamp to the sample data) returns a `d.hh:mm:ss` timespan; wrap it in `startsWith(...)` checks or compare `ticks()` values for threshold logic.
+
+## Edge cases & notes
+
+- **Integer division is faithful:** `div(10, 4)` returns `2`, exactly as a flow does — the number-one silent math bug. One caveat: JSON has no float literals, so `10.0` reads as the integer `10` here, whereas the Azure runtime float-divides for `div(10.0, 4)`.
+- **String comparisons are case-insensitive** (`indexOf`, `startsWith`, `endsWith`), matching WDL — but `equals()` is case-sensitive, also matching WDL. Yes, that inconsistency is the platform's.
+- **`if()` and `and()`/`or()` short-circuit** — the untaken branch never evaluates, so `if(equals(x, null), 'none', triggerBody()['x'])` is safe here as in a flow.
+- **`convertTimeZone` accepts Windows time-zone names** (`'Central Europe Standard Time'`) via a curated map, plus any IANA id — handy since the official docs only list the Windows names.
+- Unsupported functions (`xpath`, `workflow`, …) return *Function 'x' is not supported in this tester* — a graceful stop, never a wrong answer.

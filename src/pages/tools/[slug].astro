@@ -23,6 +23,7 @@ import CsvJsonConverter from '../../components/tools/CsvJsonConverter';
 import PluginTraceLogParser from '../../components/tools/PluginTraceLogParser';
 import DataverseUrlBuilder from '../../components/tools/DataverseUrlBuilder';
 import ColorContrastChecker from '../../components/tools/ColorContrastChecker';
+import PowerAutomateExpressionTester from '../../components/tools/PowerAutomateExpressionTester';
 
 const KNOWN_SLUGS = [
   'regex-tester',
@@ -45,6 +46,7 @@ const KNOWN_SLUGS = [
   'plugin-trace-log-parser',
   'dataverse-webapi-url-builder',
   'color-contrast-checker',
+  'power-automate-expression-tester',
 ];
 
 export async function getStaticPaths() {
@@ -93,6 +95,7 @@ if (!KNOWN_SLUGS.includes(slug)) {
   {slug === 'plugin-trace-log-parser' && <PluginTraceLogParser client:load />}
   {slug === 'dataverse-webapi-url-builder' && <DataverseUrlBuilder client:load />}
   {slug === 'color-contrast-checker' && <ColorContrastChecker client:load />}
+  {slug === 'power-automate-expression-tester' && <PowerAutomateExpressionTester client:load />}
   <Fragment slot="article">
     <Content />
   </Fragment>
